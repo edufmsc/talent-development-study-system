@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#173f3a">
+  <meta name="description" content="人才發展管理師 Day1–Day5 完整學習、工作快複習、題庫、有聲課程與能力分析。">
+  <title>人才發展學習作業系統</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+  <div id="appShell" class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">TD</div>
+        <div><b>人才發展</b><small>學習作業系統</small></div>
+      </div>
+      <nav id="sideNav" class="side-nav">
+        <button data-route="#/home">首頁</button>
+        <button data-route="#/quick">工作快複習</button>
+        <button data-route="#/course">課程地圖</button>
+        <button data-route="#/questions">題庫與模考</button>
+        <button data-route="#/audio">有聲課程</button>
+        <button data-route="#/analytics">學習分析</button>
+      </nav>
+      <div class="side-note"><b>使用原則</b><span>先學懂 → 再回想 → 再驗證 → 弱點再學。</span></div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <button id="menuBtn" class="icon-btn mobile-only" aria-label="開啟選單">☰</button>
+        <div id="breadcrumbs" class="breadcrumbs"></div>
+        <div class="top-actions"><button id="installBtn" class="btn small ghost" hidden>安裝 App</button><button id="notifyBtn" class="btn small ghost">桌面提醒</button></div>
+      </header>
+      <section id="view" class="view"></section>
+    </main>
+  </div>
+  <div id="toast" class="toast" aria-live="polite"></div>
+  <div id="quickModal" class="modal" aria-hidden="true"><div class="modal-card" id="quickModalCard"></div></div>
+  <div id="slideLightbox" class="modal" aria-hidden="true"><div class="modal-card wide" id="slideLightboxCard"></div></div>
+  <script src="data/course_data.js"></script>
+  <script src="assets/scoring.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
