@@ -1,0 +1,19 @@
+{
+  "name": "人才發展學習作業系統",
+  "short_name": "人才發展學習",
+  "start_url": "./#/home",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f7f9",
+  "theme_color": "#173f3a",
+  "lang": "zh-Hant",
+  "description": "人才發展管理師 Day1–Day5 完整學習、工作快複習、題庫、有聲課程與能力分析。",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
