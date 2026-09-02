@@ -2,45 +2,48 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#173f3a">
-  <meta name="description" content="人才發展管理師 Day1–Day5 完整學習、工作快複習、題庫、有聲課程與能力分析。">
+  <meta name="description" content="人才發展管理師 Day1–Day5 學習、快複習、題庫、有聲課程與能力分析系統">
   <title>人才發展學習作業系統</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="stylesheet" href="assets/app.css">
 </head>
 <body>
-  <div id="appShell" class="app-shell">
-    <aside class="sidebar" id="sidebar">
-      <div class="brand">
-        <div class="brand-mark">TD</div>
-        <div><b>人才發展</b><small>學習作業系統</small></div>
-      </div>
-      <nav id="sideNav" class="side-nav">
-        <button data-route="#/home">首頁</button>
-        <button data-route="#/quick">工作快複習</button>
-        <button data-route="#/course">課程地圖</button>
-        <button data-route="#/questions">題庫與模考</button>
-        <button data-route="#/audio">有聲課程</button>
-        <button data-route="#/analytics">學習分析</button>
-      </nav>
-      <div class="side-note"><b>使用原則</b><span>先學懂 → 再回想 → 再驗證 → 弱點再學。</span></div>
-    </aside>
-    <main class="main">
-      <header class="topbar">
-        <button id="menuBtn" class="icon-btn mobile-only" aria-label="開啟選單">☰</button>
-        <div id="breadcrumbs" class="breadcrumbs"></div>
-        <div class="top-actions"><button id="installBtn" class="btn small ghost" hidden>安裝 App</button><button id="notifyBtn" class="btn small ghost">桌面提醒</button></div>
-      </header>
-      <section id="view" class="view"></section>
-    </main>
-  </div>
-  <div id="toast" class="toast" aria-live="polite"></div>
-  <div id="quickModal" class="modal" aria-hidden="true"><div class="modal-card" id="quickModalCard"></div></div>
-  <div id="slideLightbox" class="modal" aria-hidden="true"><div class="modal-card wide" id="slideLightboxCard"></div></div>
-  <script src="data/course_data.js"></script>
-  <script src="assets/scoring.js"></script>
-  <script src="assets/app.js"></script>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand-block"><div class="brand-mark">TD</div><div><strong>人才發展學習作業系統</strong><span>Learn → Recall → Verify → Retain</span></div></div>
+    <nav class="main-nav" id="mainNav">
+      <a href="#/home" data-nav="home"><span>⌂</span><b>首頁</b><small>今天該做什麼</small></a>
+      <a href="#/quick" data-nav="quick"><span>⚡</span><b>工作快複習</b><small>30–90 秒卡片</small></a>
+      <a href="#/course" data-nav="course"><span>▦</span><b>深度學習</b><small>概念單元＋教材證據</small></a>
+      <a href="#/questions" data-nav="questions"><span>✎</span><b>題庫與模考</b><small>選擇／簡答／申論</small></a>
+      <a href="#/audio" data-nav="audio"><span>♫</span><b>有聲課程</b><small>完整章節循環播放</small></a>
+      <a href="#/analytics" data-nav="analytics"><span>◫</span><b>學習分析</b><small>掌握度與弱點</small></a>
+    </nav>
+    <div class="sidebar-bottom">
+      <button id="installBtn" class="ghost wide hidden">安裝到桌面</button>
+      <button id="notifyTestBtn" class="ghost wide">測試桌面提醒</button>
+      <div class="tiny-note">正式來源皆標示 PDF 頁碼。原始教材圖片保留於 Google Drive，不直接公開在 GitHub。</div>
+    </div>
+  </aside>
+  <section class="workspace">
+    <header class="topbar">
+      <button id="menuBtn" class="icon-btn mobile-only" aria-label="開啟選單">☰</button>
+      <div class="breadcrumbs" id="breadcrumbs"></div>
+      <div class="top-status"><div class="countdown-pill"><span class="dot" id="timerDot"></span><span id="timerLabel">提醒未啟動</span></div><button id="quickNowTop" class="small-btn">現在複習一張</button></div>
+    </header>
+    <main id="app" tabindex="-1"></main>
+  </section>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<div class="modal-backdrop" id="modal" aria-hidden="true"><div class="modal-card" id="modalCard"></div></div>
+<div class="slide-lightbox" id="slideLightbox" aria-hidden="true"><div class="slide-lightbox-card" id="slideLightboxCard"></div></div>
+<script src="data/course_data.js"></script>
+<script src="assets/scoring.js"></script>
+<script src="assets/app.js"></script>
 </body>
 </html>
