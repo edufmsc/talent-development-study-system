@@ -23,12 +23,38 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Sync full Day1-Day5 learning data
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p data
+          curl -L --fail --retry 4 --retry-delay 2 \
+            "https://drive.usercontent.google.com/download?id=1Niy2rwTONBdMiVqvzbes3Ermei2bKmbl&export=download&confirm=t" \
+            -o data/course_data.json
+          node <<'NODE'
+          const fs = require('fs');
+          const path = 'data/course_data.json';
+          const data = JSON.parse(fs.readFileSync(path, 'utf8'));
+          const expected = { chapters: 40, slides: 388, knowledge: 169, questionBank: 841 };
+          for (const [key, count] of Object.entries(expected)) {
+            if (!Array.isArray(data[key]) || data[key].length !== count) {
+              throw new Error(`Data QA failed: ${key} expected ${count}, got ${data[key]?.length}`);
+            }
+          }
+          fs.writeFileSync('data/course_data.js', `window.COURSE_DATA=${JSON.stringify(data)};\n`);
+          console.log(`QA PASS: ${data.chapters.length} chapters / ${data.slides.length} slides / ${data.knowledge.length} knowledge / ${data.questionBank.length} questions`);
+          NODE
+          rm -f data/course_data.json
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
+
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: "."
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
