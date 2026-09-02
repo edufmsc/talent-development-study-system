@@ -34,18 +34,28 @@ jobs:
             -o data/course_data.json
           node <<'NODE'
           const fs = require('fs');
-          const path = 'data/course_data.json';
-          const data = JSON.parse(fs.readFileSync(path, 'utf8'));
+          const data = JSON.parse(fs.readFileSync('data/course_data.json','utf8'));
           const expected = { chapters: 40, slides: 388, knowledge: 169, questionBank: 841 };
-          for (const [key, count] of Object.entries(expected)) {
-            if (!Array.isArray(data[key]) || data[key].length !== count) {
-              throw new Error(`Data QA failed: ${key} expected ${count}, got ${data[key]?.length}`);
-            }
+          for (const [key,count] of Object.entries(expected)) {
+            if (!Array.isArray(data[key]) || data[key].length !== count) throw new Error(`Data QA failed: ${key} expected ${count}, got ${data[key]?.length}`);
           }
-          fs.writeFileSync('data/course_data.js', `window.COURSE_DATA=${JSON.stringify(data)};\n`);
-          console.log(`QA PASS: ${data.chapters.length} chapters / ${data.slides.length} slides / ${data.knowledge.length} knowledge / ${data.questionBank.length} questions`);
+          const uniq=(arr,key,label)=>{const ids=arr.map(x=>x[key]);if(new Set(ids).size!==ids.length)throw new Error(`${label} duplicate IDs`)};
+          uniq(data.chapters,'id','chapters');uniq(data.knowledge,'id','knowledge');uniq(data.questionBank,'id','questions');
+          const chapters=new Set(data.chapters.map(x=>x.id)),knowledge=new Set(data.knowledge.map(x=>x.id));
+          for(const k of data.knowledge){if(!chapters.has(k.chapter))throw new Error(`Knowledge ${k.id} invalid chapter ${k.chapter}`);if(!k.sourceLocation)throw new Error(`Knowledge ${k.id} missing sourceLocation`)}
+          for(const q of data.questionBank){if(!knowledge.has(q.knowledgeId))throw new Error(`Question ${q.id} invalid knowledge ${q.knowledgeId}`);if(!q.sourceLocation)throw new Error(`Question ${q.id} missing sourceLocation`)}
+          fs.writeFileSync('data/course_data.js',`window.COURSE_DATA=${JSON.stringify(data)};\n`);
+          console.log(`DATA QA PASS: ${data.chapters.length} chapters / ${data.slides.length} slides / ${data.knowledge.length} knowledge / ${data.questionBank.length} questions`);
           NODE
           rm -f data/course_data.json
+
+      - name: JavaScript syntax QA
+        run: |
+          node --check assets/app.js
+          node --check assets/scoring.js
+          node --check sw.js
+          node --check data/course_data.js
+          echo "CODE QA PASS"
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
