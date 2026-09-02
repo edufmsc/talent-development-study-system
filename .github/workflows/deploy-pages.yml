@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -74,6 +74,20 @@ jobs:
           grep -q 'product-fixes.js' index.html
           grep -q '五大核心能力雷達' assets/product-fixes.js
           echo "PRODUCT QA PASS"
+
+      - name: Keep main data in sync
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- data/course_data.js; then
+            echo "main data already matches Drive"
+          else
+            git config user.name "talent-study-sync"
+            git config user.email "actions@users.noreply.github.com"
+            git add data/course_data.js
+            git commit -m "Sync complete learning data"
+            git push origin HEAD:main
+          fi
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
