@@ -1,5 +1,5 @@
-const CACHE='td-study-os-20260902-coverage1';
-const CORE=['./','./index.html','./assets/app.css','./assets/coverage.css','./assets/app.js','./assets/coverage.js','./assets/scoring.js','./assets/icon.svg','./data/course_data.js','./manifest.webmanifest'];
+const CACHE='td-study-os-20260902-review2';
+const CORE=['./','./index.html','./assets/app.css','./assets/coverage.css','./assets/product-fixes.css','./assets/app.js','./assets/coverage.js','./assets/product-fixes.js','./assets/scoring.js','./assets/icon.svg','./data/course_data.js','./manifest.webmanifest'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;const u=new URL(e.request.url);if(u.origin!==location.origin)return;e.respondWith(fetch(e.request).then(res=>{const copy=res.clone();caches.open(CACHE).then(c=>c.put(e.request,copy));return res}).catch(()=>caches.match(e.request).then(hit=>hit||caches.match('./index.html'))))});
