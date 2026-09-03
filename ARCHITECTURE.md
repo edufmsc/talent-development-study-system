@@ -4,25 +4,61 @@
 
 ## 1. 產品目標
 
-這不是 PPT Viewer，也不是單純題庫。正式學習鏈是：
+這不是 PPT Viewer，也不是單純題庫。正式鏈路分成兩層：
 
-**逐頁完整複習（Coverage） → 考點整合（Knowledge） → 主動回想（Quick / Questions） → 保留與弱點回補（Review / Analytics）**
+**教材治理層：Coverage 100% 稽核 → 正式教材分類**
+
+**學習層：正式逐頁學習 → Knowledge → Quick / Questions → Review / Analytics**
 
 另有一條無畫面路徑：
 
 **完整版章節 Audio → 理解整體架構與重複複習**
 
-## 2. 五個正式使用情境
+Coverage 的目的不是逼使用者每天看完所有頁，而是證明所有教材頁都被審過；真正進入日常學習的頁面，由正式 `studyDisposition` 決定。
 
-1. **逐頁完整複習**：每張教材都必須被確認，不可因 Knowledge 整併而漏頁；點進 Sxxx 必須直接看到該張教材單頁，不得用整份 PDF iframe 冒充單頁預覽。
-2. **考點深度學習**：以 Knowledge 為概念整合層，負責「怎麼理解、必懂、必背、易混、記憶法、可能考法」。
+## 2. 正式教材分類政策
+
+教材分類是 **Content State**，存放在 canonical `course_data.json`；不得由 LocalStorage、個人熟練度或單次操作決定。
+
+- `CORE`：必學；首次學習與後續複習都保留。
+- `CONTEXT`：首次學習保留；完成首次確認後，後續複習預設跳過。
+- `OPTIONAL`：活動、補充、延伸；不進預設學習流，需要時開啟。
+- `AUDIT_ONLY`：封面、純大綱、純收尾等；只保留 Coverage / 稽核證據，不進正式學習流。
+- `UNCLASSIFIED`：尚未依 Day1 標準完成人工分類；不得自動猜測為其他類別。
+
+Day1 目前正式分類：
+- CORE 45
+- CONTEXT 29
+- OPTIONAL 1
+- AUDIT_ONLY 3
+
+S001、S002、S078 已正式列為 AUDIT_ONLY。
+
+## 3. 個人學習狀態
+
+Personal State 與教材分類必須完全分離。
+
+Personal State 可包含：
+- 未學
+- 已讀／已確認
+- 需重看
+- 已掌握
+- 答題紀錄
+- Review stability / due
+- 提醒設定
+
+使用者可以變熟、變不熟，但不能因此把一張 CORE 教材頁改成 AUDIT_ONLY，也不能讓封面因換電腦又重新變成正式學習頁。
+
+## 4. 正式使用情境
+
+1. **逐頁學習**：先依正式分類決定哪些頁要進學習流；點 Sxxx 必須直接看到該張教材單頁，不得用整份 PDF iframe 冒充。
+2. **考點深度學習**：Knowledge 負責概念整合、理解、必背、易混、記憶法與可能考法。
 3. **工作快複習**：30–90 秒主動回想；弱點、到期與未學優先。
-4. **題庫／模考**：題目必須綁 Knowledge ID 與教材來源；開放題採規則比對，不假裝 AI 教師評分。
+4. **題庫與練習**：題目綁 Knowledge ID 與教材來源；開放題採規則式輔助評估，不宣稱 AI 教師閱卷。
 5. **有聲課程**：完整版分章、單章／Day／全課播放；腳本與 MP3 和教材頁碼可追溯。
+6. **學習分析**：回答學了多少、測了多少、記得多穩、哪些內容到期、哪類考試能力較弱。
 
-分析層橫跨以上流程，回答「學了多少、測了多少、哪類能力弱、哪些內容到期」。
-
-## 3. 正式責任分工
+## 5. 正式責任分工
 
 ### GitHub main = App / Code
 - 網站 UI 與 Router
@@ -34,19 +70,20 @@
 ### Google Drive = Canonical Content / Private Media
 - Day1–Day5 原始教材
 - **唯一正式 `course_data.json`**
-- 教材單頁預覽圖與媒體 manifest 的來源資產
+- `studyDisposition` 與教材稽核結果
+- 教材單頁預覽圖與媒體來源資產
 - 完整版 TTS 腳本
 - MP3
 - 大型快照與封存
 
 ### Browser / PWA = Personal State
-- 學習進度
+- 個人學習進度
 - 答題紀錄
-- Coverage 紀錄
+- Coverage 個人確認紀錄
+- Review / due
 - 提醒設定
-- 目前先使用 LocalStorage + JSON 匯出／匯入
 
-## 4. 單一資料來源規則
+## 6. 單一資料來源規則
 
 正式學習內容的唯一 canonical source 是 Google Drive：
 
@@ -58,28 +95,31 @@
 - 172 knowledge
 - 854 questions
 - Day1：78 slides / 55 knowledge
+- Day1：CORE 45 / CONTEXT 29 / OPTIONAL 1 / AUDIT_ONLY 3
 
-GitHub 的 `data/course_data.js` 是可部署／離線用的建置產物，不是內容主資料庫。
+GitHub `data/course_data.js` 是可部署／離線用的建置產物，不是內容主資料庫。
 
-不得再同時維護兩份同名 `course_data.json`。舊資料必須改名並移至 `99_舊版封存`。
+Day2–Day5 目前仍大量是 `UNCLASSIFIED`；在人工逐頁審查前，不以 Day1 的規則自動推定分類。
 
-## 5. 教材來源與 Coverage 規則
+## 7. 教材來源與 Coverage 規則
 
 每個正式 Knowledge、Question、Slide 至少要綁：
 - Day
 - Chapter
 - 原始 PDF 頁碼
-- 可用時再附教材投影片編號
+- 可用時附教材投影片編號
 
-逐頁 Coverage 的核心規則：
+核心規則：
 
-> **每頁必審，不等於每頁硬做一個考點。**
+> **Coverage 100% 留痕，不等於 Study Flow 100% 顯示。**
 
-- 有正式可考內容 → 必須連到 Knowledge。
-- 案例／導入／活動／Q&A → 可無獨立 Knowledge，但必須留下 Coverage 與頁面角色。
+- 正式可考內容 → CORE，且必須連到 Knowledge。
+- 案例／例示若有助首次理解 → CONTEXT。
+- 活動／延伸 → OPTIONAL。
+- 封面／純大綱／純收尾 → AUDIT_ONLY。
 - Knowledge 不可取代 Slide Coverage。
 
-## 6. 教材單頁預覽
+## 8. 教材單頁預覽
 
 Public GitHub 不保存老師原始投影片 JPG。
 
@@ -88,20 +128,21 @@ Public GitHub 不保存老師原始投影片 JPG。
 - GitHub `data/slide_media.js` 只保存 Sxxx → Drive File ID 對應，不保存教材圖片本體。
 - 點 Sxxx 應直接看到該張教材圖。
 - 完整 PDF 僅為「查看上下文」的次要入口。
-- 若某張單頁圖尚未建立，畫面必須明確標示未完成，不得用整份 PDF iframe 假裝該頁已完成。
-- 「Anyone with link」只視為 unlisted，不宣稱為真正 private。
+- 若某張單頁圖尚未建立，畫面必須明確標示未完成，不得用整份 PDF iframe 假裝完成。
+- 不再機械式要求所有 AUDIT_ONLY 頁都製作正式學習圖；是否需要媒體資產要依實際學習價值決定。
+- 「Anyone with link」只視為 unlisted，不宣稱真正 private。
 
-## 7. 部署規則
+## 9. 部署規則
 
 目標正式管線只有一條：
 
-`Drive canonical course_data.json → GitHub Actions → Data QA → Product QA → Build → GitHub Pages → Production smoke test`
+`Drive canonical course_data.json → GitHub Actions → Data QA → Study Policy QA → Product QA → Build → GitHub Pages → Production smoke test`
 
 部署不得回寫或自動 commit `main`。
 
-GitHub Pages Repository Setting 必須使用 **Source: GitHub Actions**；不得再同時啟用 branch-based Pages build，否則可能發生兩條部署互相覆蓋。
+GitHub Pages Repository Setting 必須使用 **Source: GitHub Actions**；不得再同時啟用 branch-based Pages build。
 
-## 8. 驗收定義
+## 10. 驗收定義
 
 以下都不能單獨算完成：
 - 程式碼存在
@@ -116,19 +157,21 @@ GitHub Pages Repository Setting 必須使用 **Source: GitHub Actions**；不得
 4. Production smoke test 通過；
 5. 使用者在固定正式網址實際看得到且操作正確。
 
-## 9. 版本與分支原則
+## 11. 版本與分支原則
 
 - **正式維護只更新 `main`。**
 - **所有既有或未來支線 branch 一律保留，不自動刪除、不因 merge 刪除。**
 - 不建立 v8 / v9 / final-final 日常版本資料夾。
 - Git commit 管程式歷史；Drive `99_舊版封存` 管內容／大型資產快照。
-- `01_網站離線快照` 中的 ZIP 僅能視為 Snapshot / Offline Package，不能再被視為 Production source of truth。
+- `01_網站離線快照` 中的 ZIP 僅視為 Snapshot / Offline Package，不是 Production source of truth。
 
-## 10. 目前優先順序
+## 12. 目前優先順序
 
-1. 收斂部署與資料治理。
-2. 建立 Slide Preview media manifest。
-3. 完成 Day1 S001–S078 單頁預覽與網站接入。
-4. Day1 完整人工內容／產品驗收並封版成標準樣板。
-5. 再依同一標準擴展 Day2–Day5。
-6. MP3 生產與跨裝置／可靠背景提醒屬後續產品化階段，不先壓過教材正確性。
+1. 驗證 Day1 四類正式學習流在 Production 的實際行為。
+2. 依正式分類決定需要製作的單頁教材資產，不盲做 78 張。
+3. 將已穩定的 `product-fixes.js` / `slide-preview.js` 邏輯逐步收回正式 renderer，停止補丁繼續增加。
+4. 統一 Personal State 的匯出／匯入 schema，避免只備份 Knowledge 卻遺失 Coverage / Review 等狀態。
+5. 修正提醒循環為「完成一次學習後才重新起算下一輪」，並加入稍後提醒。
+6. 修正分析命名、Ready Score 與硬編舊統計。
+7. Day1 封版後，再逐頁人工分類 Day2–Day5。
+8. MP3 生產與真正跨裝置同步屬後續產品化階段。
