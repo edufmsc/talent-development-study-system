@@ -19,6 +19,24 @@ window.SLIDE_MEDIA={
     'd1-s015':{driveFileId:'1_78KNMAuPmuA4aEaFxyCH5Dbbs3GMgWF',fileName:'D1_S015.jpg'},
     'd1-s016':{driveFileId:'1k9dwCPZbVZhX-KJauc_BmtTpFm28pBUp',fileName:'D1_S016.jpg'},
     'd1-s017':{driveFileId:'1xrYIR06DHdygPv8PjQIl_UPYK0cQ_mrp',fileName:'D1_S017.jpg'},
-    'd1-s018':{driveFileId:'1sQHw6A-CPV8TXGTHSTWT93UbVpP1bNYG',fileName:'D1_S018.jpg'}
+    'd1-s018':{driveFileId:'1sQHw6A-CPV8TXGTHSTWT93UbVpP1bNYG',fileName:'D1_S018.jpg'},
+    'd1-s019':{driveFileId:'1Ma6WdreLs4kcWHW7__KY7jGezMRQvWXq',fileName:'D1_S019.jpg'},
+    'd1-s020':{driveFileId:'1sChxpC3yPGceeXANqJ6t9JqONeoQYxJI',fileName:'D1_S020.jpg'},
+    'd1-s021':{driveFileId:'1DYRwxfeeIAssiBO7Ga_hFxWn_fIO_yIY',fileName:'D1_S021.jpg'},
+    'd1-s022':{driveFileId:'124wHiwb6o74FMyBmBJWMS9DUMUggT1VB',fileName:'D1_S022.jpg'},
+    'd1-s023':{driveFileId:'11tGKC56V95Q4JI2ZRZijqz4TIaYsrzSM',fileName:'D1_S023.jpg'},
+    'd1-s024':{driveFileId:'1n_J-U9uR3wdQAvTuha3btPP3Ko-QvsuW',fileName:'D1_S024.jpg'},
+    'd1-s025':{driveFileId:'1YZck62M30OjtuiKQTvq395bbZDj5_ZQS',fileName:'D1_S025.jpg'},
+    'd1-s026':{driveFileId:'1NDfL76jd6chAUQr9v9gFADv_-znUQJLg',fileName:'D1_S026.jpg'},
+    'd1-s027':{driveFileId:'12TX8CG8iKWXQQXWWbkLDUt1yyrZcOw6h',fileName:'D1_S027.jpg'},
+    'd1-s028':{driveFileId:'1djCZgdlDeWaS17rJ4Mlc33_GWkG_apIO',fileName:'D1_S028.jpg'},
+    'd1-s029':{driveFileId:'1FRE4OWNuGloYclDPtC9sBuLYdEz0sG-J',fileName:'D1_S029.jpg'},
+    'd1-s030':{driveFileId:'1PsRGX2qmNFqRqvyfUIQJd7gv21FHSWn3',fileName:'D1_S030.jpg'},
+    'd1-s031':{driveFileId:'13i4xAcpn4gD_f5T5f5Lh2r8l5Z6tBKRe',fileName:'D1_S031.jpg'},
+    'd1-s032':{driveFileId:'1td9FrTnIftMCnUfRMfM5cPOId_sJpkhf',fileName:'D1_S032.jpg'},
+    'd1-s033':{driveFileId:'1abb7sSGqwt1zOSUoRby_9z_vP1D7--Hv',fileName:'D1_S033.jpg'},
+    'd1-s034':{driveFileId:'13VM03Ql3Ilv8z32t3ifvw7QRYC3rOyqx',fileName:'D1_S034.jpg'},
+    'd1-s035':{driveFileId:'16qVzBv0Gf7k2685UZwwihWRR9PzGlvF-',fileName:'D1_S035.jpg'},
+    'd1-s036':{driveFileId:'1oJhc9PoKhR0N1c1RG-8iDPl2Ep26-ApF',fileName:'D1_S036.jpg'}
   }
 };
