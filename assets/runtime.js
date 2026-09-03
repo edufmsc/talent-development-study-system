@@ -1,8 +1,23 @@
 (()=>{'use strict';
+const D=window.COURSE_DATA||{slides:[]};
+const COVER_KEY='td-slide-coverage-v2';
 function parts(){return (location.hash||'#/home').replace(/^#\/?/,'').split('/').filter(Boolean)}
-function run(){const p=parts();if(window.Coverage?.render?.(p))return;window.Coverage?.afterRender?.(p);window.Insights?.afterRender?.(p)}
+function readCoverage(){try{return JSON.parse(localStorage.getItem(COVER_KEY)||'{}')}catch(e){return {}}}
+function pageKey(s){return `d${s.day}-s${String(s.slide).padStart(3,'0')}`}
+function isCompleted(s){return readCoverage().pages?.[pageKey(s)]?.status==='已完成本頁'}
+function inStudyFlow(s){if(s.studyDisposition==='CORE')return true;if(s.studyDisposition==='CONTEXT')return !isCompleted(s)||readCoverage().pages?.[pageKey(s)]?.status==='需重看';return false}
+function nearestStudyPage(s){const list=D.slides.filter(x=>x.chapter===s.chapter).sort((a,b)=>a.slide-b.slide),i=list.findIndex(x=>x.day===s.day&&x.slide===s.slide);return list.slice(i+1).find(inStudyFlow)||list.slice(0,i).reverse().find(inStudyFlow)||null}
+function routeGuard(p){
+  if(p[0]!=='slide'||p.length<3||p[3])return false;
+  const day=Number(p[1]),slide=Number(p[2]),s=D.slides.find(x=>x.day===day&&x.slide===slide);
+  if(!s||inStudyFlow(s))return false;
+  const target=nearestStudyPage(s);
+  location.hash=target?`#/slide/${target.day}/${target.slide}`:`#/slides/${s.chapter}`;
+  return true;
+}
+function run(){const p=parts();if(routeGuard(p))return;if(window.Coverage?.render?.(p))return;window.Coverage?.afterRender?.(p);window.Insights?.afterRender?.(p)}
 window.addEventListener('hashchange',()=>setTimeout(run,0));
 window.addEventListener('DOMContentLoaded',()=>setTimeout(run,0));
 setTimeout(run,40);
-window.TDRuntime={run};
+window.TDRuntime={run,routeGuard};
 })();
