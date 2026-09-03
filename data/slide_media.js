@@ -10,6 +10,15 @@ window.SLIDE_MEDIA={
     'd1-s006':{driveFileId:'12C_juax8kvwOMFKf9EBZV2aLt8oA9UHq',fileName:'D1_S006.jpg'},
     'd1-s007':{driveFileId:'1dPdxCnwve4cnvh-T4Pyf9wAZ9qJlkKw6',fileName:'D1_S007.jpg'},
     'd1-s008':{driveFileId:'1lW0j1wH0OUkcCSfmgqM1wLzPtKCm1qb3',fileName:'D1_S008.jpg'},
-    'd1-s009':{driveFileId:'13tvCDJFci24YqAwqoPYE19M-ZEsHlhdG',fileName:'D1_S009.jpg'}
+    'd1-s009':{driveFileId:'13tvCDJFci24YqAwqoPYE19M-ZEsHlhdG',fileName:'D1_S009.jpg'},
+    'd1-s010':{driveFileId:'1-6FpKAk-5fk01cDLGdjhq_FHT31cONRo',fileName:'D1_S010.jpg'},
+    'd1-s011':{driveFileId:'1GAm1an1bCinHNDR8P0jyX8u-wiQZf9VR',fileName:'D1_S011.jpg'},
+    'd1-s012':{driveFileId:'1QqKXDYHn5f-G4jzRjFWEnb7bIOIt2iUf',fileName:'D1_S012.jpg'},
+    'd1-s013':{driveFileId:'1B7VEHBFNFSkEk_DUtfDfW88JcKwQxGWD',fileName:'D1_S013.jpg'},
+    'd1-s014':{driveFileId:'1cSm6AbiL7wkm6kcWbg0sGGn3-DlykSU7',fileName:'D1_S014.jpg'},
+    'd1-s015':{driveFileId:'1_78KNMAuPmuA4aEaFxyCH5Dbbs3GMgWF',fileName:'D1_S015.jpg'},
+    'd1-s016':{driveFileId:'1k9dwCPZbVZhX-KJauc_BmtTpFm28pBUp',fileName:'D1_S016.jpg'},
+    'd1-s017':{driveFileId:'1xrYIR06DHdygPv8PjQIl_UPYK0cQ_mrp',fileName:'D1_S017.jpg'},
+    'd1-s018':{driveFileId:'1sQHw6A-CPV8TXGTHSTWT93UbVpP1bNYG',fileName:'D1_S018.jpg'}
   }
 };
