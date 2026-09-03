@@ -1,0 +1,66 @@
+name: Quality Gate
+
+on:
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: JavaScript syntax
+        run: |
+          set -euo pipefail
+          node --check assets/app.js
+          node --check assets/coverage.js
+          node --check assets/slide-preview.js
+          node --check assets/insights.js
+          node --check assets/runtime.js
+          node --check assets/scoring.js
+          node --check sw.js
+          node --check data/course_data.js
+          node --check data/slide_media.js
+
+      - name: Architecture invariants
+        run: |
+          set -euo pipefail
+          test -s assets/coverage.css
+          test -s assets/insights.css
+          test -s assets/slide-preview.css
+          grep -q 'assets/coverage.js' index.html
+          grep -q 'assets/slide-preview.js' index.html
+          grep -q 'assets/insights.js' index.html
+          grep -q 'assets/runtime.js' index.html
+          grep -q 'window.Coverage' assets/coverage.js
+          grep -q 'window.SlidePreview' assets/slide-preview.js
+          grep -q 'window.Insights' assets/insights.js
+          grep -q 'td-slide-coverage-v2' assets/coverage.js
+          ! grep -R -q '已確認－無獨立考點' assets index.html
+          ! grep -R -q 'product-fixes' assets index.html
+          ! grep -R -q 'study-policy.js' assets index.html
+          test ! -e assets/product-fixes.js
+          test ! -e assets/product-fixes.css
+          test ! -e assets/study-policy.js
+
+      - name: Day1 content boundary
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs'),vm=require('vm');
+          const code=fs.readFileSync('data/course_data.js','utf8');
+          const box={window:{}};vm.createContext(box);vm.runInContext(code,box);
+          const data=box.window.COURSE_DATA;
+          if(!data)throw new Error('COURSE_DATA missing');
+          const day1=data.slides.filter(s=>s.day===1),allowed=new Set(['CORE','CONTEXT','OPTIONAL','AUDIT_ONLY']);
+          const bad=day1.filter(s=>!allowed.has(s.studyDisposition));if(bad.length)throw new Error(`Day1 invalid disposition: ${bad.map(s=>s.slideLabel).join(',')}`);
+          for(const label of ['S001','S002','S078']){const s=day1.find(x=>x.slideLabel===label);if(!s||s.studyDisposition!=='AUDIT_ONLY')throw new Error(`${label} must be AUDIT_ONLY`)}
+          const formalWrong=day1.filter(s=>String(s.auditStatus||'').includes('正式考點')&&(s.studyDisposition!=='CORE'||!(s.knowledgeIds||[]).length));if(formalWrong.length)throw new Error(`Formal page boundary failed: ${formalWrong.map(s=>s.slideLabel).join(',')}`);
+          const contextK=day1.filter(s=>s.studyDisposition==='CONTEXT'&&(s.knowledgeIds||[]).length);if(contextK.length)throw new Error(`CONTEXT owns Knowledge: ${contextK.map(s=>s.slideLabel).join(',')}`);
+          console.log(`DAY1 BOUNDARY PASS: ${day1.length} slides`);
+          NODE
