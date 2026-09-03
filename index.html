@@ -12,7 +12,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="stylesheet" href="assets/app.css">
   <link rel="stylesheet" href="assets/coverage.css">
-  <link rel="stylesheet" href="assets/product-fixes.css">
+  <link rel="stylesheet" href="assets/insights.css">
+  <link rel="stylesheet" href="assets/slide-preview.css">
 </head>
 <body>
 <div class="app-shell">
@@ -20,7 +21,7 @@
     <div class="brand-block"><div class="brand-mark">TD</div><div><strong>人才發展學習作業系統</strong><span>Cover → Learn → Recall → Retain</span></div></div>
     <nav class="main-nav" id="mainNav">
       <a href="#/home" data-nav="home"><span>⌂</span><b>首頁</b><small>今天該做什麼</small></a>
-      <a href="#/slides" data-nav="slides"><span>▤</span><b>逐頁完整複習</b><small>每張教材先稽核，再進正確學習流</small></a>
+      <a href="#/slides" data-nav="slides"><span>▤</span><b>逐頁完整複習</b><small>教材 Coverage 與正式學習分流</small></a>
       <a href="#/quick" data-nav="quick"><span>⚡</span><b>工作快複習</b><small>30–90 秒卡片</small></a>
       <a href="#/course" data-nav="course"><span>▦</span><b>考點深度學習</b><small>Knowledge整合＋教材證據</small></a>
       <a href="#/questions" data-nav="questions"><span>✎</span><b>題庫與練習</b><small>選擇／簡答／申論</small></a>
@@ -30,7 +31,7 @@
     <div class="sidebar-bottom">
       <button id="installBtn" class="ghost wide hidden">安裝到桌面</button>
       <button id="notifyTestBtn" class="ghost wide">測試桌面提醒</button>
-      <div class="tiny-note">Coverage 保留完整教材證據；正式學習流依 CORE / CONTEXT / OPTIONAL / AUDIT_ONLY 分類，不把封面與純轉場硬塞進日常複習。</div>
+      <div class="tiny-note">教材分類由 canonical data 管理；個人完成／重看只記錄學習狀態，不改變 CORE / CONTEXT / OPTIONAL / AUDIT_ONLY。</div>
     </div>
   </aside>
   <section class="workspace">
@@ -49,9 +50,9 @@
 <script src="data/slide_media.js"></script>
 <script src="assets/scoring.js"></script>
 <script src="assets/app.js"></script>
-<script src="assets/coverage.js"></script>
-<script src="assets/product-fixes.js"></script>
 <script src="assets/slide-preview.js"></script>
-<script src="assets/study-policy.js"></script>
+<script src="assets/coverage.js"></script>
+<script src="assets/insights.js"></script>
+<script src="assets/runtime.js"></script>
 </body>
 </html>
