@@ -12,7 +12,7 @@
 
 ## 學習流程
 
-1. **逐頁完整複習**：每張教材都要被確認；有考點就連到 Knowledge，沒有獨立考點也保留 Coverage。
+1. **逐頁完整複習**：每張教材都要被確認；有考點就連到 Knowledge，沒有獨立考點也保留 Coverage。逐頁主畫面必須直接顯示該張教材單頁，不得用整份 PDF 代替。
 2. **考點深度學習**：Knowledge 負責概念整合、理解、必背、易混、記憶法、可能考法。
 3. **工作快複習**：30–90 秒主動回想，弱點／到期優先。
 4. **題庫與模考**：題目綁 Knowledge ID 與教材來源頁碼。
@@ -36,6 +36,8 @@
 
 GitHub `data/course_data.js` 是建置／部署用產物，不應人工雙邊維護。
 
+教材單頁媒體對應由 `data/slide_media.js` 管理；完整 PDF 只能當上下文備援入口。
+
 ## GitHub Pages
 
 Repository Pages Source 應設定為 **GitHub Actions**。
@@ -52,10 +54,11 @@ Repository Pages Source 應設定為 **GitHub Actions**。
 - HTTPS 下可使用 Web Notification。
 - 純靜態網站在瀏覽器／PWA 完全關閉時，無法保證背景定時通知；真正 100 分版本需 Push backend 或 Windows companion。
 
-## 版本原則
+## 版本與分支原則
 
-- 只維護 `main`，使用者固定測試同一個正式網址。
-- 不再建立 v8 / v9 / final-final 日常版本。
+- **正式維護只動 `main`。**
+- **任何既有或未來支線 branch 都保留，不自動刪除、不因 merge 自動清除。**
+- 不再建立 v8 / v9 / final-final 日常版本資料夾。
 - Google Drive 的網站 ZIP 只視為 Snapshot / Offline Package，不是 Production source of truth。
 - 舊內容資料一律移入 `99_舊版封存` 並清楚加上日期或 ARCHIVE 標記。
 
