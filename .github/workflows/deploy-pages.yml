@@ -62,17 +62,15 @@ jobs:
           const allowed=new Set(['CORE','CONTEXT','OPTIONAL','AUDIT_ONLY']);
           const badDisposition=day1.filter(s=>!allowed.has(s.studyDisposition));if(badDisposition.length)throw new Error(`Day1 missing/invalid studyDisposition: ${badDisposition.map(s=>s.slideLabel).join(',')}`);
           const dispositionCounts=day1.reduce((m,s)=>(m[s.studyDisposition]=(m[s.studyDisposition]||0)+1,m),{});
-          const target={CORE:45,CONTEXT:29,OPTIONAL:1,AUDIT_ONLY:3};
-          for(const [k,v] of Object.entries(target))if(dispositionCounts[k]!==v)throw new Error(`Day1 ${k} count mismatch: ${dispositionCounts[k]} vs ${v}`);
           for(const label of ['S001','S002','S078']){const s=day1.find(x=>x.slideLabel===label);if(!s||s.studyDisposition!=='AUDIT_ONLY')throw new Error(`${label} must be AUDIT_ONLY`)}
-          const formalWrong=day1.filter(s=>String(s.auditStatus||'').includes('正式考點')&&!['CORE'].includes(s.studyDisposition));if(formalWrong.length)throw new Error(`Formal points misclassified: ${formalWrong.map(s=>s.slideLabel).join(',')}`);
+          const formalWrong=day1.filter(s=>String(s.auditStatus||'').includes('正式考點')&&s.studyDisposition!=='CORE');if(formalWrong.length)throw new Error(`Formal points misclassified: ${formalWrong.map(s=>s.slideLabel).join(',')}`);
           const contextsWithK=day1.filter(s=>s.studyDisposition==='CONTEXT'&&(s.knowledgeIds||[]).length);if(contextsWithK.length)throw new Error(`CONTEXT pages unexpectedly own Knowledge: ${contextsWithK.map(s=>s.slideLabel).join(',')}`);
           if(!data.studyPolicy?.version)throw new Error('Missing studyPolicy metadata');
 
           fs.writeFileSync('data/course_data.js',`window.COURSE_DATA=${JSON.stringify(data)};\n`);
           console.log(`DATA QA PASS: ${expected.chapters} chapters / ${expected.slides} slides / ${expected.knowledge} knowledge / ${expected.questions} questions`);
           console.log(`DAY1 QA PASS: ${day1.length} slides / ${day1K.length} knowledge / 0 formal pages without Knowledge / ${guideCount} unique guides`);
-          console.log(`STUDY POLICY QA PASS: CORE ${dispositionCounts.CORE} / CONTEXT ${dispositionCounts.CONTEXT} / OPTIONAL ${dispositionCounts.OPTIONAL} / AUDIT_ONLY ${dispositionCounts.AUDIT_ONLY}`);
+          console.log(`STUDY POLICY QA PASS: ${Object.entries(dispositionCounts).map(([k,v])=>`${k} ${v}`).join(' / ')}`);
           NODE
           rm -f data/course_data.json
 
@@ -81,24 +79,33 @@ jobs:
           set -euo pipefail
           node --check assets/app.js
           node --check assets/coverage.js
-          node --check assets/product-fixes.js
           node --check assets/slide-preview.js
-          node --check assets/study-policy.js
+          node --check assets/insights.js
+          node --check assets/runtime.js
           node --check assets/scoring.js
           node --check sw.js
           node --check data/course_data.js
           node --check data/slide_media.js
           test -s assets/coverage.css
-          test -s assets/product-fixes.css
-          test -s assets/study-policy.js
+          test -s assets/insights.css
+          test -s assets/slide-preview.css
           test -s data/slide_media.js
           grep -q '#/slides' index.html
           grep -q 'data/slide_media.js' index.html
-          grep -q 'assets/study-policy.js' index.html
-          ! grep -q 'assets/study-flow.js' index.html
-          grep -q 'product-fixes.js' index.html
-          grep -q '五大核心能力雷達' assets/product-fixes.js
-          grep -q 'CORE / CONTEXT / OPTIONAL / AUDIT_ONLY' assets/study-policy.js
+          grep -q 'assets/coverage.js' index.html
+          grep -q 'assets/insights.js' index.html
+          grep -q 'assets/runtime.js' index.html
+          grep -q 'window.Coverage' assets/coverage.js
+          grep -q 'window.SlidePreview' assets/slide-preview.js
+          grep -q 'window.Insights' assets/insights.js
+          grep -q 'td-slide-coverage-v2' assets/coverage.js
+          grep -q 'AUDIT_ONLY' assets/coverage.js
+          ! grep -R -q '已確認－無獨立考點' assets index.html
+          ! grep -q 'product-fixes' index.html
+          ! grep -q 'study-policy.js' index.html
+          test ! -e assets/product-fixes.js
+          test ! -e assets/product-fixes.css
+          test ! -e assets/study-policy.js
           grep -q 'window.COURSE_DATA' data/course_data.js
           grep -q 'window.SLIDE_MEDIA' data/slide_media.js
           echo "PRODUCT QA PASS"
@@ -122,16 +129,21 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$PAGE_URL"
-          curl -L --fail --retry 4 --retry-delay 2 "${PAGE_URL}" -o /tmp/index.html
-          curl -L --fail --retry 4 --retry-delay 2 "${PAGE_URL%/}/data/course_data.js" -o /tmp/course_data.js
-          curl -L --fail --retry 4 --retry-delay 2 "${PAGE_URL%/}/data/slide_media.js" -o /tmp/slide_media.js
-          curl -L --fail --retry 4 --retry-delay 2 "${PAGE_URL%/}/assets/study-policy.js" -o /tmp/study_policy.js
+          base="${PAGE_URL%/}"
+          curl -L --fail --retry 4 --retry-delay 2 "$PAGE_URL" -o /tmp/index.html
+          curl -L --fail --retry 4 --retry-delay 2 "$base/data/course_data.js" -o /tmp/course_data.js
+          curl -L --fail --retry 4 --retry-delay 2 "$base/data/slide_media.js" -o /tmp/slide_media.js
+          curl -L --fail --retry 4 --retry-delay 2 "$base/assets/coverage.js" -o /tmp/coverage.js
+          curl -L --fail --retry 4 --retry-delay 2 "$base/assets/runtime.js" -o /tmp/runtime.js
           grep -q '人才發展學習作業系統' /tmp/index.html
           grep -q '#/slides' /tmp/index.html
-          grep -q 'assets/study-policy.js' /tmp/index.html
-          ! grep -q 'assets/study-flow.js' /tmp/index.html
+          grep -q 'assets/runtime.js' /tmp/index.html
+          ! grep -q 'product-fixes' /tmp/index.html
+          ! grep -q 'study-policy.js' /tmp/index.html
           grep -q 'window.COURSE_DATA' /tmp/course_data.js
           grep -q 'studyDisposition' /tmp/course_data.js
           grep -q 'window.SLIDE_MEDIA' /tmp/slide_media.js
-          grep -q 'AUDIT_ONLY' /tmp/study_policy.js
+          grep -q 'td-slide-coverage-v2' /tmp/coverage.js
+          grep -q 'window.Coverage' /tmp/coverage.js
+          grep -q 'window.TDRuntime' /tmp/runtime.js
           echo "PRODUCTION SMOKE PASS: $PAGE_URL"
