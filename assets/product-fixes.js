@@ -1,5 +1,6 @@
 (()=>{'use strict';
 const D=window.COURSE_DATA||{chapters:[],slides:[],knowledge:[],questionBank:[]};
+const M=window.SLIDE_MEDIA||{items:{}};
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 const APP_KEY='td-study-os-100', COVER_KEY='td-slide-coverage-v1';
@@ -26,8 +27,23 @@ function analyticsPlus(){
  const scores=lastScoreMap(),ts=typeStats();const box=document.createElement('section');box.id='analyticsPlusV2';box.innerHTML=`<div class="analytics-grid analytics-plus"><section class="panel"><h2>五大核心能力雷達</h2><div class="radar-wrap"><canvas id="radarV2" width="520" height="360"></canvas></div><p class="tiny muted">有效分＝最近作答平均 × 已測覆蓋率。只做少數熟題，不會得到虛高分數。</p></section><section class="panel"><h2>能力分析表</h2><table class="analysis-table"><thead><tr><th>能力</th><th>作答平均</th><th>覆蓋率</th><th>有效分</th></tr></thead><tbody>${Object.entries(ts).map(([t,x])=>`<tr><td><b>${t}</b></td><td>${x.avg}%</td><td>${x.tested}/${x.count} (${x.cover}%)</td><td><b>${x.effective}</b></td></tr>`).join('')}</tbody></table></section></div><div class="analytics-grid analytics-plus"><section class="panel"><h2>Day × 類型熱圖</h2>${heatmap(scores)}</section><section class="panel"><h2>逐頁 Coverage</h2><div class="coverage-day-table">${[1,2,3,4,5].map(d=>{const ss=daySlides(d),done=ss.filter(slideDone).length,p=ss.length?Math.round(done/ss.length*100):0;return `<div><span>Day ${d}</span><div class="coverage-progress"><i style="width:${p}%"></i></div><b>${done}/${ss.length}｜${p}%</b></div>`}).join('')}</div></section></div><section class="panel analytics-plus"><h2>逐章掌握度</h2>${chapterTable(scores)}</section>`;
  const metrics=app.querySelector('.grid.four');if(metrics)metrics.insertAdjacentElement('afterend',box);else app.appendChild(box);drawRadar($('#radarV2'),Object.values(ts).map(x=>x.effective),Object.keys(ts));
 }
+function slideMediaKey(day,slide){return `d${day}-s${String(slide).padStart(3,'0')}`}
+function fullPdfUrl(day){return D.sources?.[day]?.url||''}
+function driveImageUrl(fileId){return `https://drive.google.com/uc?export=view&id=${encodeURIComponent(fileId)}`}
 function drivePreview(){
- if(!location.hash.startsWith('#/slide/'))return;const m=location.hash.match(/^#\/slide\/(\d+)\/(\d+)/);if(!m)return;const day=+m[1],slide=+m[2],s=D.slides.find(x=>x.day===day&&x.slide===slide);if(!s)return;const card=$('.evidence-card');if(!card||card.querySelector('.drive-preview-wrap'))return;const url=D.sources?.[day]?.url||'';const id=(url.match(/\/d\/([^/]+)/)||[])[1];if(!id)return;const wrap=document.createElement('div');wrap.className='drive-preview-wrap';wrap.innerHTML=`<div class="drive-preview-head"><b>教材原頁內嵌預覽</b><span>目標：PDF P${s.pdfPage}${s.position?'｜'+esc(s.position):''}</span></div><iframe class="drive-preview" loading="lazy" referrerpolicy="no-referrer" src="https://drive.google.com/file/d/${esc(id)}/preview#page=${s.pdfPage}" title="Day ${day} PDF P${s.pdfPage}"></iframe><p class="tiny muted">Google Drive 若未自動跳到指定頁，請依上方 PDF P${s.pdfPage} 對照；原始投影片不複製進 Public GitHub。</p>`;card.appendChild(wrap);
+ if(!location.hash.startsWith('#/slide/'))return;
+ const m=location.hash.match(/^#\/slide\/(\d+)\/(\d+)/);if(!m)return;
+ const day=+m[1],slide=+m[2],s=D.slides.find(x=>x.day===day&&x.slide===slide);if(!s)return;
+ const card=$('.evidence-card');if(!card||card.querySelector('.drive-preview-wrap'))return;
+ const media=M.items?.[slideMediaKey(day,slide)];
+ const pdf=fullPdfUrl(day);
+ const wrap=document.createElement('div');wrap.className='drive-preview-wrap';
+ if(media?.driveFileId){
+   wrap.innerHTML=`<div class="drive-preview-head"><b>教材單頁預覽｜D${day} S${String(slide).padStart(3,'0')}</b><span>原始 PDF P${s.pdfPage}${s.position?'｜'+esc(s.position):''}</span></div><a class="slide-image-link" href="https://drive.google.com/file/d/${esc(media.driveFileId)}/view" target="_blank" rel="noopener"><img class="slide-page-image" loading="lazy" referrerpolicy="no-referrer" src="${driveImageUrl(media.driveFileId)}" alt="Day ${day} S${String(slide).padStart(3,'0')} 教材單頁"></a><div class="slide-source-actions">${pdf?`<a class="btn" href="${esc(pdf)}" target="_blank" rel="noopener">查看完整 PDF 上下文</a>`:''}<span class="tiny muted">逐頁複習主體是這一張教材圖；完整 PDF 只做上下文核對。</span></div>`;
+ }else{
+   wrap.innerHTML=`<div class="drive-preview-head"><b>教材單頁預覽尚未建立</b><span>D${day} S${String(slide).padStart(3,'0')}｜原始 PDF P${s.pdfPage}</span></div><div class="slide-preview-pending"><strong>這一頁目前不能假裝完成。</strong><p>單張教材圖尚未進入 media manifest，因此不再嵌入整份 PDF 冒充逐頁預覽。</p>${pdf?`<a class="btn" href="${esc(pdf)}" target="_blank" rel="noopener">暫時查看完整 PDF 上下文</a>`:''}</div>`;
+ }
+ card.appendChild(wrap);
 }
 function slideStatus(){
  if(!location.hash.startsWith('#/slide/'))return;const m=location.hash.match(/^#\/slide\/(\d+)\/(\d+)/);if(!m)return;const s=D.slides.find(x=>x.day===+m[1]&&x.slide===+m[2]);if(!s)return;const host=$('.slide-detail-main');if(!host||$('#pageTeachingStatus'))return;const g=s.guide||{},box=document.createElement('section');box.id='pageTeachingStatus';box.className='coverage-teach-card teaching-status-card';const k=(s.knowledgeIds||[]).length;box.innerHTML=`<h2>本頁教學化狀態</h2><div class="tags"><span class="tag strong">${esc(g.teachingStatus||'Coverage已建立')}</span><span class="tag">${k} 個直接 Knowledge</span><span class="tag exam">${esc(g.pageRole||s.auditStatus||'')}</span></div><p>${esc(g.pagePrompt||'先看原頁，再用自己的話說出這頁在本章的作用。')}</p>`;host.insertAdjacentElement('afterbegin',box)
