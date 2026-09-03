@@ -71,3 +71,28 @@ jobs:
           if(flow.some(s=>['S001','S002','S078'].includes(s.slideLabel)))throw new Error('AUDIT_ONLY page leaked into formal study flow');
           console.log(`DAY1 BOUNDARY PASS: ${day1.length} slides / formal flow ${flow.length}`);
           NODE
+
+      - name: Day1 exact-slide media coverage
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs'),vm=require('vm');
+          const code=fs.readFileSync('data/slide_media.js','utf8');
+          const box={window:{}};vm.createContext(box);vm.runInContext(code,box);
+          const media=box.window.SLIDE_MEDIA;
+          if(!media?.items)throw new Error('SLIDE_MEDIA missing');
+          const expected=Array.from({length:78},(_,i)=>`d1-s${String(i+1).padStart(3,'0')}`);
+          const keys=Object.keys(media.items).filter(k=>k.startsWith('d1-s')).sort();
+          const missing=expected.filter(k=>!media.items[k]);
+          if(missing.length)throw new Error(`Day1 exact-slide media missing: ${missing.join(',')}`);
+          if(keys.length!==78)throw new Error(`Day1 exact-slide media expected 78, got ${keys.length}`);
+          const ids=expected.map(k=>media.items[k]?.driveFileId);
+          if(ids.some(x=>!x))throw new Error('Day1 exact-slide media has blank Drive file ID');
+          if(new Set(ids).size!==ids.length)throw new Error('Day1 exact-slide media has duplicate Drive file IDs');
+          for(let i=1;i<=78;i++){
+            const k=`d1-s${String(i).padStart(3,'0')}`;
+            const expectedName=`D1_S${String(i).padStart(3,'0')}.jpg`;
+            if(media.items[k]?.fileName!==expectedName)throw new Error(`${k} filename mismatch`);
+          }
+          console.log('DAY1 EXACT-SLIDE MEDIA PASS: 78/78');
+          NODE
