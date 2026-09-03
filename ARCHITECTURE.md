@@ -1,177 +1,189 @@
-# 人才發展學習作業系統｜現行架構
+# 人才發展學習作業系統｜正式架構
 
-> 本文件是目前正式架構摘要。需求演進與決策歷史以「行動學習」191頁紀錄為依據；本文件只保留現在仍有效的規則。
+> 本文件只描述現在應保留的架構與驗收規則；歷史補丁與過渡部署不視為正式設計。
 
-## 1. 產品目標
+## 1. 產品主鏈
 
-這不是 PPT Viewer，也不是單純題庫。正式鏈路分成兩層：
+本系統不是 PPT Viewer，也不是單純題庫。正式鏈路是：
 
-**教材治理層：Coverage 100% 稽核 → 正式教材分類**
+**教材治理：Slide Coverage → Content Classification**
 
-**學習層：正式逐頁學習 → Knowledge → Quick / Questions → Review / Analytics**
+**正式學習：CORE / CONTEXT → Page Study → Knowledge → Quick / Questions → Review / Analytics**
 
-另有一條無畫面路徑：
+**輔助路徑：OPTIONAL / AUDIT_ONLY → 需要時查看，不進預設學習流**
 
-**完整版章節 Audio → 理解整體架構與重複複習**
+**有聲路徑：完整章節 Audio → 理解整體架構與重複複習**
 
-Coverage 的目的不是逼使用者每天看完所有頁，而是證明所有教材頁都被審過；真正進入日常學習的頁面，由正式 `studyDisposition` 決定。
+Coverage 100% 的意思是「教材每頁都有被治理與追溯」，不是「每天必須把每一頁都當考點重學」。
 
-## 2. 正式教材分類政策
+## 2. Content State 與 Personal State 必須分離
 
-教材分類是 **Content State**，存放在 canonical `course_data.json`；不得由 LocalStorage、個人熟練度或單次操作決定。
+### Content State：由 canonical data 決定
 
-- `CORE`：必學；首次學習與後續複習都保留。
-- `CONTEXT`：首次學習保留；完成首次確認後，後續複習預設跳過。
-- `OPTIONAL`：活動、補充、延伸；不進預設學習流，需要時開啟。
-- `AUDIT_ONLY`：封面、純大綱、純收尾等；只保留 Coverage / 稽核證據，不進正式學習流。
-- `UNCLASSIFIED`：尚未依 Day1 標準完成人工分類；不得自動猜測為其他類別。
+`studyDisposition` 只有四種正式值：
 
-Day1 目前正式分類：
-- CORE 45
-- CONTEXT 29
-- OPTIONAL 1
-- AUDIT_ONLY 3
+- `CORE`：正式必學，保留在首次學習與後續複習。
+- `CONTEXT`：首次脈絡頁；完成首次學習後，後續預設可跳過。
+- `OPTIONAL`：補充／活動／延伸，不進預設學習流。
+- `AUDIT_ONLY`：只保留教材稽核證據，不進正式學習流。
 
-S001、S002、S078 已正式列為 AUDIT_ONLY。
+`UNCLASSIFIED` 只代表尚未完成人工分類，系統不得自動猜成 CORE。
 
-## 3. 個人學習狀態
+教材分類不能被 LocalStorage、個人熟悉度或任何「按一下」改變。
 
-Personal State 與教材分類必須完全分離。
+### Personal State：只記使用者自己的學習狀況
 
-Personal State 可包含：
-- 未學
-- 已讀／已確認
+逐頁 Personal State 只保留：
+
+- 未複習
+- 已完成本頁
 - 需重看
-- 已掌握
-- 答題紀錄
-- Review stability / due
-- 提醒設定
 
-使用者可以變熟、變不熟，但不能因此把一張 CORE 教材頁改成 AUDIT_ONLY，也不能讓封面因換電腦又重新變成正式學習頁。
+舊的 `已確認－無獨立考點` 不再是 Personal State。是否有獨立考點屬 Content State / Knowledge mapping，不應由使用者按鈕決定。
 
-## 4. 正式使用情境
+## 3. Day1 目前事實基準
 
-1. **逐頁學習**：先依正式分類決定哪些頁要進學習流；點 Sxxx 必須直接看到該張教材單頁，不得用整份 PDF iframe 冒充。
-2. **考點深度學習**：Knowledge 負責概念整合、理解、必背、易混、記憶法與可能考法。
-3. **工作快複習**：30–90 秒主動回想；弱點、到期與未學優先。
-4. **題庫與練習**：題目綁 Knowledge ID 與教材來源；開放題採規則式輔助評估，不宣稱 AI 教師閱卷。
-5. **有聲課程**：完整版分章、單章／Day／全課播放；腳本與 MP3 和教材頁碼可追溯。
-6. **學習分析**：回答學了多少、測了多少、記得多穩、哪些內容到期、哪類考試能力較弱。
+目前 canonical data 為：
 
-## 5. 正式責任分工
-
-### GitHub main = App / Code
-- 網站 UI 與 Router
-- PWA / Service Worker
-- 快卡、題庫、評分與學習分析邏輯
-- GitHub Actions Build / QA / Deploy
-- 文件與版本管理
-
-### Google Drive = Canonical Content / Private Media
-- Day1–Day5 原始教材
-- **唯一正式 `course_data.json`**
-- `studyDisposition` 與教材稽核結果
-- 教材單頁預覽圖與媒體來源資產
-- 完整版 TTS 腳本
-- MP3
-- 大型快照與封存
-
-### Browser / PWA = Personal State
-- 個人學習進度
-- 答題紀錄
-- Coverage 個人確認紀錄
-- Review / due
-- 提醒設定
-
-## 6. 單一資料來源規則
-
-正式學習內容的唯一 canonical source 是 Google Drive：
-
-`08_學習複習系統/04_教材索引與稽核/course_data.json`
-
-目前正式內容基準：
 - 40 chapters
 - 388 slides
 - 172 knowledge
 - 854 questions
 - Day1：78 slides / 55 knowledge
-- Day1：CORE 45 / CONTEXT 29 / OPTIONAL 1 / AUDIT_ONLY 3
+- S001、S002、S078：`AUDIT_ONLY`
 
-GitHub `data/course_data.js` 是可部署／離線用的建置產物，不是內容主資料庫。
+目前 Day1 分類統計可顯示於 QA log，但**不把某一版的 CORE / CONTEXT / OPTIONAL / AUDIT_ONLY 數量寫死成永久部署規則**。部署驗證的是分類合法、邊界正確與 Coverage 完整，而不是禁止未來經人工複核後調整分類。
 
-Day2–Day5 目前仍大量是 `UNCLASSIFIED`；在人工逐頁審查前，不以 Day1 的規則自動推定分類。
+Day2–Day5 尚未逐頁完成正式分類時，維持 `UNCLASSIFIED`，不自動套用 Day1 結果。
 
-## 7. 教材來源與 Coverage 規則
+## 4. 模組責任
 
-每個正式 Knowledge、Question、Slide 至少要綁：
-- Day
-- Chapter
-- 原始 PDF 頁碼
-- 可用時附教材投影片編號
+### `assets/app.js`
 
-核心規則：
+負責原有主學習功能：
 
-> **Coverage 100% 留痕，不等於 Study Flow 100% 顯示。**
+- Home
+- Quick Review
+- Course / Knowledge
+- Questions
+- Audio
+- Analytics 基礎頁面
+- Reminder / Review engine
 
-- 正式可考內容 → CORE，且必須連到 Knowledge。
-- 案例／例示若有助首次理解 → CONTEXT。
-- 活動／延伸 → OPTIONAL。
-- 封面／純大綱／純收尾 → AUDIT_ONLY。
-- Knowledge 不可取代 Slide Coverage。
+### `assets/coverage.js`
 
-## 8. 教材單頁預覽
+唯一負責逐頁學習領域：
+
+- `#/slides`
+- `#/slides/:chapter/:mode`
+- `#/slide/:day/:slide/:mode`
+- Content State 顯示
+- 正式學習序列
+- Coverage / Study 分流
+- 上一張／下一張／直接跳頁
+- 個人逐頁完成／重看狀態
+
+不得再另外疊一個 `study-policy.js` 修改它的結果。
+
+### `assets/slide-preview.js`
+
+純元件。只接受指定 slide 與 evidence container，顯示該張 Google Drive 單頁教材；不註冊 Router、不修改學習分類、不自己重畫頁面。
+
+### `assets/insights.js`
+
+純學習分析／首頁摘要元件：
+
+- Day1 Coverage / formal learning summary
+- Radar
+- Day × 類型熱圖
+- 逐章掌握度
+
+不得處理 slide routing 或教材預覽。
+
+### `assets/runtime.js`
+
+只負責模組整合與 route lifecycle，沒有教材規則、沒有學習演算法、沒有 UI patch。
+
+## 5. 已淘汰的補丁層
+
+正式架構不再使用：
+
+- `assets/product-fixes.js`
+- `assets/product-fixes.css`
+- `assets/study-policy.js`
+- Personal State：`已確認－無獨立考點`
+
+上述功能若仍有價值，已分別收回 `coverage.js`、`slide-preview.js`、`insights.js`。
+
+## 6. 教材單頁預覽
 
 Public GitHub 不保存老師原始投影片 JPG。
 
-正式設計：
-- 單頁預覽圖放 Google Drive 的 08 系統媒體資產區。
-- GitHub `data/slide_media.js` 只保存 Sxxx → Drive File ID 對應，不保存教材圖片本體。
-- 點 Sxxx 應直接看到該張教材圖。
-- 完整 PDF 僅為「查看上下文」的次要入口。
-- 若某張單頁圖尚未建立，畫面必須明確標示未完成，不得用整份 PDF iframe 假裝完成。
-- 不再機械式要求所有 AUDIT_ONLY 頁都製作正式學習圖；是否需要媒體資產要依實際學習價值決定。
-- 「Anyone with link」只視為 unlisted，不宣稱真正 private。
+- 單頁預覽圖放 Google Drive。
+- `data/slide_media.js` 只保存 Sxxx → Drive File ID。
+- 點 Sxxx 應直接看到該張教材單頁。
+- 完整 PDF 只是「查看上下文」的次要入口。
+- 單頁資產不存在時必須明確顯示「尚未建立」，不得用整份 PDF 冒充逐頁預覽。
 
-## 9. 部署規則
+## 7. Source of Truth
 
-目標正式管線只有一條：
+### Google Drive = Canonical Content / Private-ish Media
 
-`Drive canonical course_data.json → GitHub Actions → Data QA → Study Policy QA → Product QA → Build → GitHub Pages → Production smoke test`
+- 唯一正式 `course_data.json`
+- 原始教材
+- `studyDisposition`
+- 人工教材稽核結果
+- 單頁教材媒體
+- TTS scripts / MP3 assets
 
-部署不得回寫或自動 commit `main`。
+### GitHub main = Application / Build
 
-GitHub Pages Repository Setting 必須使用 **Source: GitHub Actions**；不得再同時啟用 branch-based Pages build。
+- UI / modules
+- PWA / Service Worker
+- QA / Deploy workflow
+- `data/course_data.js` 僅為部署／離線建置產物，不是內容主資料。
 
-## 10. 驗收定義
+### Browser / PWA = Personal State
 
-以下都不能單獨算完成：
-- 程式碼存在
-- Drive 有檔案
-- GitHub Action 綠燈
-- QA PASS
+- Knowledge mastery / Review
+- 答題紀錄
+- 逐頁完成／重看
+- 提醒設定
 
-真正完成必須同時滿足：
+## 8. 部署只允許一條正式管線
+
+正式目標只有：
+
+`Drive canonical JSON → GitHub Actions → Data QA → Product QA → Pages Deploy → Production Smoke Test`
+
+GitHub Pages Repository Setting 必須使用 **Source: GitHub Actions**。
+
+不得再同時使用 branch-based `pages build and deployment`。也不保留「把 canonical data 自動 commit 回 main」的同步 workaround；那只是為雙部署問題遮掩症狀。
+
+## 9. QA 原則
+
+部署至少檢查：
+
+- chapters / slides / knowledge / questions 結構與 IDs 完整。
+- chapter slide range 無缺頁、無重複。
+- Day1 每張都有合法 `studyDisposition`。
+- 正式考點頁必須是 CORE 且有 Knowledge。
+- CONTEXT 不應擁有獨立 Knowledge。
+- S001 / S002 / S078 為 AUDIT_ONLY。
+- 舊 `已確認－無獨立考點` 字串不得存在正式 assets。
+- `product-fixes` / `study-policy.js` 不得重新出現在 Production index。
+- PWA cache 必須跟正式模組一致。
+
+## 10. 完成的定義
+
+以下任何一項單獨都不算完成：程式存在、QA PASS、Action 綠燈、Drive 有檔案。
+
+真正完成需要：
+
 1. canonical data 正確；
 2. automated QA 通過；
-3. 正式 Pages 部署成功；
-4. Production smoke test 通過；
-5. 使用者在固定正式網址實際看得到且操作正確。
+3. Pages 只有單一正式部署來源；
+4. production smoke test 通過；
+5. 固定正式網址實際操作符合預期。
 
-## 11. 版本與分支原則
-
-- **正式維護只更新 `main`。**
-- **所有既有或未來支線 branch 一律保留，不自動刪除、不因 merge 刪除。**
-- 不建立 v8 / v9 / final-final 日常版本資料夾。
-- Git commit 管程式歷史；Drive `99_舊版封存` 管內容／大型資產快照。
-- `01_網站離線快照` 中的 ZIP 僅視為 Snapshot / Offline Package，不是 Production source of truth。
-
-## 12. 目前優先順序
-
-1. 驗證 Day1 四類正式學習流在 Production 的實際行為。
-2. 依正式分類決定需要製作的單頁教材資產，不盲做 78 張。
-3. 將已穩定的 `product-fixes.js` / `slide-preview.js` 邏輯逐步收回正式 renderer，停止補丁繼續增加。
-4. 統一 Personal State 的匯出／匯入 schema，避免只備份 Knowledge 卻遺失 Coverage / Review 等狀態。
-5. 修正提醒循環為「完成一次學習後才重新起算下一輪」，並加入稍後提醒。
-6. 修正分析命名、Ready Score 與硬編舊統計。
-7. Day1 封版後，再逐頁人工分類 Day2–Day5。
-8. MP3 生產與真正跨裝置同步屬後續產品化階段。
+Day1 正式封版後，才把同一套逐頁人工分類與教學化標準複製到 Day2–Day5。
