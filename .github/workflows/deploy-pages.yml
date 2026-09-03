@@ -53,45 +53,22 @@ jobs:
           const slideKeys=data.slides.map(s=>`${s.day}-${s.slide}`);
           if(new Set(slideKeys).size!==slideKeys.length) throw new Error('duplicate slide keys');
 
-          const expected={
-            chapters:data.chapters.length,
-            slides:data.slides.length,
-            knowledge:data.knowledge.length,
-            questions:data.questionBank.length
-          };
+          const expected={chapters:data.chapters.length,slides:data.slides.length,knowledge:data.knowledge.length,questions:data.questionBank.length};
           if(!data.counts) throw new Error('Missing counts metadata');
-          for(const [key,val] of Object.entries(expected)) {
-            if(Number(data.counts[key])!==val) throw new Error(`counts.${key} mismatch: ${data.counts[key]} vs ${val}`);
-          }
+          for(const [key,val] of Object.entries(expected)) if(Number(data.counts[key])!==val) throw new Error(`counts.${key} mismatch: ${data.counts[key]} vs ${val}`);
 
           const chapters=new Map(data.chapters.map(c=>[c.id,c]));
           const knowledge=new Set(data.knowledge.map(k=>k.id));
-          for(const k of data.knowledge){
-            if(!chapters.has(k.chapter)) throw new Error(`Knowledge ${k.id} invalid chapter`);
-            if(!k.sourceLocation) throw new Error(`Knowledge ${k.id} missing source`);
-          }
-          for(const q of data.questionBank){
-            if(!knowledge.has(q.knowledgeId)) throw new Error(`Question ${q.id} invalid knowledge`);
-            if(!q.sourceLocation) throw new Error(`Question ${q.id} missing source`);
-          }
-          for(const s of data.slides){
-            if(!chapters.has(s.chapter)) throw new Error(`Slide D${s.day} S${s.slide} invalid chapter`);
-            if(!s.pdfPage) throw new Error(`Slide D${s.day} S${s.slide} missing PDF page`);
-            for(const id of s.knowledgeIds||[]) if(!knowledge.has(id)) throw new Error(`Slide D${s.day} S${s.slide} invalid knowledge ${id}`);
-          }
-          for(const c of data.chapters){
-            const ss=data.slides.filter(s=>s.chapter===c.id).map(s=>s.slide).sort((a,b)=>a-b);
-            if(!ss.length) throw new Error(`${c.id} has no slide coverage`);
-            if(ss[0]!==c.slideStart||ss[ss.length-1]!==c.slideEnd) throw new Error(`${c.id} slide range mismatch: ${ss[0]}-${ss[ss.length-1]} vs ${c.slideStart}-${c.slideEnd}`);
-            for(let n=c.slideStart;n<=c.slideEnd;n++) if(!ss.includes(n)) throw new Error(`${c.id} missing slide ${n}`);
-          }
+          for(const k of data.knowledge){if(!chapters.has(k.chapter))throw new Error(`Knowledge ${k.id} invalid chapter`);if(!k.sourceLocation)throw new Error(`Knowledge ${k.id} missing source`)}
+          for(const q of data.questionBank){if(!knowledge.has(q.knowledgeId))throw new Error(`Question ${q.id} invalid knowledge`);if(!q.sourceLocation)throw new Error(`Question ${q.id} missing source`)}
+          for(const s of data.slides){if(!chapters.has(s.chapter))throw new Error(`Slide D${s.day} S${s.slide} invalid chapter`);if(!s.pdfPage)throw new Error(`Slide D${s.day} S${s.slide} missing PDF page`);for(const id of s.knowledgeIds||[])if(!knowledge.has(id))throw new Error(`Slide D${s.day} S${s.slide} invalid knowledge ${id}`)}
+          for(const c of data.chapters){const ss=data.slides.filter(s=>s.chapter===c.id).map(s=>s.slide).sort((a,b)=>a-b);if(!ss.length)throw new Error(`${c.id} has no slide coverage`);if(ss[0]!==c.slideStart||ss[ss.length-1]!==c.slideEnd)throw new Error(`${c.id} slide range mismatch: ${ss[0]}-${ss[ss.length-1]} vs ${c.slideStart}-${c.slideEnd}`);for(let n=c.slideStart;n<=c.slideEnd;n++)if(!ss.includes(n))throw new Error(`${c.id} missing slide ${n}`)}
 
-          const day1=data.slides.filter(s=>s.day===1);
-          const day1K=data.knowledge.filter(k=>k.day===1);
+          const day1=data.slides.filter(s=>s.day===1), day1K=data.knowledge.filter(k=>k.day===1);
           const formalNoK=day1.filter(s=>String(s.auditStatus||'').includes('正式考點')&&!(s.knowledgeIds||[]).length);
-          if(formalNoK.length) throw new Error(`Day1 formal pages without Knowledge: ${formalNoK.map(s=>s.slideLabel).join(',')}`);
+          if(formalNoK.length)throw new Error(`Day1 formal pages without Knowledge: ${formalNoK.map(s=>s.slideLabel).join(',')}`);
           const guideCount=new Set(day1.map(s=>s.guide?.howToStudy).filter(Boolean)).size;
-          if(guideCount<20) throw new Error(`Day1 page teaching guides are too generic: only ${guideCount} unique guides`);
+          if(guideCount<20)throw new Error(`Day1 page teaching guides are too generic: only ${guideCount} unique guides`);
 
           fs.writeFileSync('data/course_data.js',`window.COURSE_DATA=${JSON.stringify(data)};\n`);
           console.log(`DATA QA PASS: ${expected.chapters} chapters / ${expected.slides} slides / ${expected.knowledge} knowledge / ${expected.questions} questions`);
@@ -108,12 +85,16 @@ jobs:
           node --check assets/scoring.js
           node --check sw.js
           node --check data/course_data.js
+          node --check data/slide_media.js
           test -s assets/coverage.css
           test -s assets/product-fixes.css
+          test -s data/slide_media.js
           grep -q '#/slides' index.html
+          grep -q 'data/slide_media.js' index.html
           grep -q 'product-fixes.js' index.html
           grep -q '五大核心能力雷達' assets/product-fixes.js
           grep -q 'window.COURSE_DATA' data/course_data.js
+          grep -q 'window.SLIDE_MEDIA' data/slide_media.js
           echo "PRODUCT QA PASS"
 
       - name: Configure Pages
@@ -137,7 +118,10 @@ jobs:
           test -n "$PAGE_URL"
           curl -L --fail --retry 4 --retry-delay 2 "${PAGE_URL}" -o /tmp/index.html
           curl -L --fail --retry 4 --retry-delay 2 "${PAGE_URL%/}/data/course_data.js" -o /tmp/course_data.js
+          curl -L --fail --retry 4 --retry-delay 2 "${PAGE_URL%/}/data/slide_media.js" -o /tmp/slide_media.js
           grep -q '人才發展學習作業系統' /tmp/index.html
           grep -q '#/slides' /tmp/index.html
+          grep -q 'data/slide_media.js' /tmp/index.html
           grep -q 'window.COURSE_DATA' /tmp/course_data.js
+          grep -q 'window.SLIDE_MEDIA' /tmp/slide_media.js
           echo "PRODUCTION SMOKE PASS: $PAGE_URL"
