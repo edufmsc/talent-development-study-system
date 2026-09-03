@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
@@ -24,7 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Sync and validate learning data
+      - name: Fetch canonical learning data from Google Drive
         shell: bash
         run: |
           set -euo pipefail
@@ -32,36 +32,76 @@ jobs:
           curl -L --fail --retry 4 --retry-delay 2 \
             "https://drive.usercontent.google.com/download?id=1Niy2rwTONBdMiVqvzbes3Ermei2bKmbl&export=download&confirm=t" \
             -o data/course_data.json
+
+      - name: Validate and build learning data
+        shell: bash
+        run: |
+          set -euo pipefail
           node <<'NODE'
           const fs=require('fs');
           const data=JSON.parse(fs.readFileSync('data/course_data.json','utf8'));
-          for(const key of ['chapters','slides','knowledge','questionBank']) if(!Array.isArray(data[key])||!data[key].length) throw new Error(`Missing ${key}`);
-          const uniq=(arr,key,label)=>{const ids=arr.map(x=>x[key]);if(new Set(ids).size!==ids.length)throw new Error(`${label} duplicate IDs`)};
-          uniq(data.chapters,'id','chapters');uniq(data.knowledge,'id','knowledge');uniq(data.questionBank,'id','questions');
-          const slideKeys=data.slides.map(s=>`${s.day}-${s.slide}`);if(new Set(slideKeys).size!==slideKeys.length)throw new Error('duplicate slide keys');
-          const chapters=new Map(data.chapters.map(c=>[c.id,c])), knowledge=new Set(data.knowledge.map(k=>k.id));
-          for(const k of data.knowledge){if(!chapters.has(k.chapter))throw new Error(`Knowledge ${k.id} invalid chapter`);if(!k.sourceLocation)throw new Error(`Knowledge ${k.id} missing source`)}
-          for(const q of data.questionBank){if(!knowledge.has(q.knowledgeId))throw new Error(`Question ${q.id} invalid knowledge`);if(!q.sourceLocation)throw new Error(`Question ${q.id} missing source`)}
-          for(const s of data.slides){if(!chapters.has(s.chapter))throw new Error(`Slide D${s.day} S${s.slide} invalid chapter`);if(!s.pdfPage)throw new Error(`Slide D${s.day} S${s.slide} missing PDF page`);for(const id of s.knowledgeIds||[])if(!knowledge.has(id))throw new Error(`Slide D${s.day} S${s.slide} invalid knowledge ${id}`)}
+          for(const key of ['chapters','slides','knowledge','questionBank']) {
+            if(!Array.isArray(data[key])||!data[key].length) throw new Error(`Missing ${key}`);
+          }
+          const uniq=(arr,key,label)=>{
+            const ids=arr.map(x=>x[key]);
+            if(new Set(ids).size!==ids.length) throw new Error(`${label} duplicate IDs`);
+          };
+          uniq(data.chapters,'id','chapters');
+          uniq(data.knowledge,'id','knowledge');
+          uniq(data.questionBank,'id','questions');
+          const slideKeys=data.slides.map(s=>`${s.day}-${s.slide}`);
+          if(new Set(slideKeys).size!==slideKeys.length) throw new Error('duplicate slide keys');
+
+          const expected={
+            chapters:data.chapters.length,
+            slides:data.slides.length,
+            knowledge:data.knowledge.length,
+            questions:data.questionBank.length
+          };
+          if(!data.counts) throw new Error('Missing counts metadata');
+          for(const [key,val] of Object.entries(expected)) {
+            if(Number(data.counts[key])!==val) throw new Error(`counts.${key} mismatch: ${data.counts[key]} vs ${val}`);
+          }
+
+          const chapters=new Map(data.chapters.map(c=>[c.id,c]));
+          const knowledge=new Set(data.knowledge.map(k=>k.id));
+          for(const k of data.knowledge){
+            if(!chapters.has(k.chapter)) throw new Error(`Knowledge ${k.id} invalid chapter`);
+            if(!k.sourceLocation) throw new Error(`Knowledge ${k.id} missing source`);
+          }
+          for(const q of data.questionBank){
+            if(!knowledge.has(q.knowledgeId)) throw new Error(`Question ${q.id} invalid knowledge`);
+            if(!q.sourceLocation) throw new Error(`Question ${q.id} missing source`);
+          }
+          for(const s of data.slides){
+            if(!chapters.has(s.chapter)) throw new Error(`Slide D${s.day} S${s.slide} invalid chapter`);
+            if(!s.pdfPage) throw new Error(`Slide D${s.day} S${s.slide} missing PDF page`);
+            for(const id of s.knowledgeIds||[]) if(!knowledge.has(id)) throw new Error(`Slide D${s.day} S${s.slide} invalid knowledge ${id}`);
+          }
           for(const c of data.chapters){
             const ss=data.slides.filter(s=>s.chapter===c.id).map(s=>s.slide).sort((a,b)=>a-b);
-            if(!ss.length)throw new Error(`${c.id} has no slide coverage`);
-            if(ss[0]!==c.slideStart||ss[ss.length-1]!==c.slideEnd)throw new Error(`${c.id} slide range mismatch: ${ss[0]}-${ss[ss.length-1]} vs ${c.slideStart}-${c.slideEnd}`);
-            for(let n=c.slideStart;n<=c.slideEnd;n++)if(!ss.includes(n))throw new Error(`${c.id} missing slide ${n}`);
+            if(!ss.length) throw new Error(`${c.id} has no slide coverage`);
+            if(ss[0]!==c.slideStart||ss[ss.length-1]!==c.slideEnd) throw new Error(`${c.id} slide range mismatch: ${ss[0]}-${ss[ss.length-1]} vs ${c.slideStart}-${c.slideEnd}`);
+            for(let n=c.slideStart;n<=c.slideEnd;n++) if(!ss.includes(n)) throw new Error(`${c.id} missing slide ${n}`);
           }
-          const day1=data.slides.filter(s=>s.day===1), day1K=data.knowledge.filter(k=>k.day===1);
+
+          const day1=data.slides.filter(s=>s.day===1);
+          const day1K=data.knowledge.filter(k=>k.day===1);
           const formalNoK=day1.filter(s=>String(s.auditStatus||'').includes('正式考點')&&!(s.knowledgeIds||[]).length);
-          if(formalNoK.length)throw new Error(`Day1 formal pages without Knowledge: ${formalNoK.map(s=>s.slideLabel).join(',')}`);
+          if(formalNoK.length) throw new Error(`Day1 formal pages without Knowledge: ${formalNoK.map(s=>s.slideLabel).join(',')}`);
           const guideCount=new Set(day1.map(s=>s.guide?.howToStudy).filter(Boolean)).size;
-          if(guideCount<20)throw new Error(`Day1 page teaching guides are too generic: only ${guideCount} unique guides`);
+          if(guideCount<20) throw new Error(`Day1 page teaching guides are too generic: only ${guideCount} unique guides`);
+
           fs.writeFileSync('data/course_data.js',`window.COURSE_DATA=${JSON.stringify(data)};\n`);
-          console.log(`DATA QA PASS: ${data.chapters.length} chapters / ${data.slides.length} slides / ${data.knowledge.length} knowledge / ${data.questionBank.length} questions`);
+          console.log(`DATA QA PASS: ${expected.chapters} chapters / ${expected.slides} slides / ${expected.knowledge} knowledge / ${expected.questions} questions`);
           console.log(`DAY1 QA PASS: ${day1.length} slides / ${day1K.length} knowledge / 0 formal pages without Knowledge / ${guideCount} unique guides`);
           NODE
           rm -f data/course_data.json
 
       - name: Product code QA
         run: |
+          set -euo pipefail
           node --check assets/app.js
           node --check assets/coverage.js
           node --check assets/product-fixes.js
@@ -73,28 +113,31 @@ jobs:
           grep -q '#/slides' index.html
           grep -q 'product-fixes.js' index.html
           grep -q '五大核心能力雷達' assets/product-fixes.js
+          grep -q 'window.COURSE_DATA' data/course_data.js
           echo "PRODUCT QA PASS"
-
-      - name: Keep main data in sync
-        shell: bash
-        run: |
-          set -euo pipefail
-          if git diff --quiet -- data/course_data.js; then
-            echo "main data already matches Drive"
-          else
-            git config user.name "talent-study-sync"
-            git config user.email "actions@users.noreply.github.com"
-            git add data/course_data.js
-            git commit -m "Sync complete learning data"
-            git push origin HEAD:main
-          fi
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
+
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: "."
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Production smoke test
+        shell: bash
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          test -n "$PAGE_URL"
+          curl -L --fail --retry 4 --retry-delay 2 "${PAGE_URL}" -o /tmp/index.html
+          curl -L --fail --retry 4 --retry-delay 2 "${PAGE_URL%/}/data/course_data.js" -o /tmp/course_data.js
+          grep -q '人才發展學習作業系統' /tmp/index.html
+          grep -q '#/slides' /tmp/index.html
+          grep -q 'window.COURSE_DATA' /tmp/course_data.js
+          echo "PRODUCTION SMOKE PASS: $PAGE_URL"
