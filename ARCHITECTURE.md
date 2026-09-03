@@ -14,7 +14,7 @@
 
 ## 2. 五個正式使用情境
 
-1. **逐頁完整複習**：每張教材都必須被確認，不可因 Knowledge 整併而漏頁。教材原頁是證據與視覺記憶來源。
+1. **逐頁完整複習**：每張教材都必須被確認，不可因 Knowledge 整併而漏頁；點進 Sxxx 必須直接看到該張教材單頁，不得用整份 PDF iframe 冒充單頁預覽。
 2. **考點深度學習**：以 Knowledge 為概念整合層，負責「怎麼理解、必懂、必背、易混、記憶法、可能考法」。
 3. **工作快複習**：30–90 秒主動回想；弱點、到期與未學優先。
 4. **題庫／模考**：題目必須綁 Knowledge ID 與教材來源；開放題採規則比對，不假裝 AI 教師評分。
@@ -34,7 +34,7 @@
 ### Google Drive = Canonical Content / Private Media
 - Day1–Day5 原始教材
 - **唯一正式 `course_data.json`**
-- 教材單頁預覽圖與媒體 manifest
+- 教材單頁預覽圖與媒體 manifest 的來源資產
 - 完整版 TTS 腳本
 - MP3
 - 大型快照與封存
@@ -85,8 +85,10 @@ Public GitHub 不保存老師原始投影片 JPG。
 
 正式設計：
 - 單頁預覽圖放 Google Drive 的 08 系統媒體資產區。
-- 網站透過 media manifest 取得對應 Drive File ID / URL。
-- 點 Sxxx 應直接看到該張教材證據；完整 PDF 僅為查看上下文的次要入口。
+- GitHub `data/slide_media.js` 只保存 Sxxx → Drive File ID 對應，不保存教材圖片本體。
+- 點 Sxxx 應直接看到該張教材圖。
+- 完整 PDF 僅為「查看上下文」的次要入口。
+- 若某張單頁圖尚未建立，畫面必須明確標示未完成，不得用整份 PDF iframe 假裝該頁已完成。
 - 「Anyone with link」只視為 unlisted，不宣稱為真正 private。
 
 ## 7. 部署規則
@@ -114,12 +116,13 @@ GitHub Pages Repository Setting 必須使用 **Source: GitHub Actions**；不得
 4. Production smoke test 通過；
 5. 使用者在固定正式網址實際看得到且操作正確。
 
-## 9. 版本原則
+## 9. 版本與分支原則
 
-- 只維護 `main`，符合目前使用者固定測同一網址的需求。
+- **正式維護只更新 `main`。**
+- **所有既有或未來支線 branch 一律保留，不自動刪除、不因 merge 刪除。**
 - 不建立 v8 / v9 / final-final 日常版本資料夾。
 - Git commit 管程式歷史；Drive `99_舊版封存` 管內容／大型資產快照。
-- `01_網站正式版` 中的 ZIP 僅能視為 Snapshot / Offline Package，**不能再被視為 Production source of truth**。
+- `01_網站離線快照` 中的 ZIP 僅能視為 Snapshot / Offline Package，不能再被視為 Production source of truth。
 
 ## 10. 目前優先順序
 
