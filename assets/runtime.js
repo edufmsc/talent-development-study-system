@@ -29,7 +29,7 @@ function continueAfterContextCompletion(e){
     location.hash=target?`#/slide/${target.day}/${target.slide}`:`#/slides/${s.chapter}`;
   },0);
 }
-function run(){const p=parts();if(routeGuard(p))return;if(window.Coverage?.render?.(p))return;window.Coverage?.afterRender?.(p);window.Insights?.afterRender?.(p)}
+function run(){const p=parts();if(p[0]==='map'){window.LearningMap?.render?.();return}if(routeGuard(p))return;if(window.Coverage?.render?.(p))return;window.Coverage?.afterRender?.(p);window.Insights?.afterRender?.(p)}
 document.addEventListener('click',continueAfterContextCompletion,true);
 window.addEventListener('hashchange',()=>setTimeout(run,0));
 window.addEventListener('DOMContentLoaded',()=>setTimeout(run,0));
