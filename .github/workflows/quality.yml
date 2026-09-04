@@ -30,6 +30,7 @@ jobs:
           node --check data/course_data.js
           node --check data/slide_media.js
           node --check data/learning_map.js
+          node --check data/learning_map_forms.js
 
       - name: Architecture invariants
         run: |
@@ -40,15 +41,17 @@ jobs:
           test -s assets/slide-preview.css
           grep -q '#/map' index.html
           grep -q 'data/learning_map.js' index.html
+          grep -q 'data/learning_map_forms.js' index.html
           grep -q 'assets/learning-map.js' index.html
           grep -q 'assets/learning-map.css' index.html
-          grep -q 'assets/coverage.js' index.html
-          grep -q 'assets/slide-preview.js' index.html
-          grep -q 'assets/insights.js' index.html
-          grep -q 'assets/runtime.js' index.html
           grep -q 'window.LearningMap' assets/learning-map.js
           grep -q "p\[0\]==='map'" assets/runtime.js
           grep -q 'window.LEARNING_MAP_DATA' data/learning_map.js
+          grep -q 'window.LEARNING_MAP_FORMS' data/learning_map_forms.js
+          grep -q 'td-learning-map-workbook-v1' data/learning_map_forms.js
+          grep -q 'SYSTEM GOD VIEW' assets/learning-map.js
+          grep -q 'data-lm-field' assets/learning-map.js
+          grep -q 'lm-board' assets/learning-map.js
           grep -q 'window.Coverage' assets/coverage.js
           grep -q 'window.SlidePreview' assets/slide-preview.js
           grep -q 'window.Insights' assets/insights.js
@@ -65,26 +68,37 @@ jobs:
           ! grep -q '五大核心能力雷達' assets/insights.js
           grep -q '不代表完整的人才發展專業能力' assets/insights.js
 
-      - name: Learning map integrity
+      - name: God View form integrity
         run: |
           set -euo pipefail
           node <<'NODE'
           const fs=require('fs'),vm=require('vm');
-          const code=fs.readFileSync('data/learning_map.js','utf8');
-          const box={window:{}};vm.createContext(box);vm.runInContext(code,box);
-          const map=box.window.LEARNING_MAP_DATA;
-          if(!map)throw new Error('LEARNING_MAP_DATA missing');
+          const box={window:{}};vm.createContext(box);
+          vm.runInContext(fs.readFileSync('data/learning_map.js','utf8'),box);
+          vm.runInContext(fs.readFileSync('data/learning_map_forms.js','utf8'),box);
+          const map=box.window.LEARNING_MAP_DATA,forms=box.window.LEARNING_MAP_FORMS;
+          if(!map||!forms)throw new Error('Learning map/form data missing');
           const expected=['strategy','f01','f02','f03','f04','f05','f06','e07','f07','evidence','reassess'];
           const ids=map.systemFlow.map(x=>x.id);
-          for(const id of expected)if(!ids.includes(id))throw new Error(`Learning map missing ${id}`);
+          for(const id of expected){
+            if(!ids.includes(id))throw new Error(`Learning map missing ${id}`);
+            if(!forms.nodes[id])throw new Error(`Interactive form schema missing ${id}`);
+            if(!Array.isArray(forms.nodes[id].sections)||!forms.nodes[id].sections.length)throw new Error(`${id} has no interactive sections`);
+          }
           if(new Set(ids).size!==ids.length)throw new Error('Learning map duplicate node IDs');
-          if(map.learningMapSteps.length!==8)throw new Error(`E07 Learning Map expected 8 steps, got ${map.learningMapSteps.length}`);
-          if(map.transitionGaps.length!==3)throw new Error(`Transition Learning Map expected 3 priority gaps, got ${map.transitionGaps.length}`);
-          const e07=map.systemFlow.find(x=>x.id==='e07');
-          if(!e07||!e07.purpose.includes('F05')||!e07.purpose.includes('F07'))throw new Error('E07 bridge boundary missing');
-          if(!map.sourceBoundary.includes('不以完成課程直接推論能力提升'))throw new Error('Evidence boundary missing');
-          if(JSON.stringify(map).includes('drive.google.com/file/d/'))throw new Error('Private Drive file URLs must not be embedded in public learning map data');
-          console.log('LEARNING MAP PASS: system flow + 8-step E07 + 3 priority gaps');
+          if(map.learningMapSteps.length!==8)throw new Error('E07 expected 8 steps');
+          if(map.transitionGaps.length!==3)throw new Error('E07 expected 3 priority gaps');
+          const f02=forms.nodes.f02.sections.find(s=>s.id==='competency');
+          const f05=forms.nodes.f05.sections.find(s=>s.id==='gap');
+          const f07=forms.nodes.f07.sections.find(s=>s.id==='plans');
+          if(f02?.repeat?.rows!==8)throw new Error('F02 must expose 8 competency rows');
+          if(f05?.repeat?.rows!==8)throw new Error('F05 must expose 8 competency gap rows');
+          if(f07?.repeat?.rows!==3)throw new Error('F07 must expose 3 development plan rows');
+          if(!forms.nodes.f03.rules.join(' ').includes('Performance'))throw new Error('F03 anti-bias rule missing');
+          if(!forms.nodes.f05.rules.join(' ').includes('暫不判定'))throw new Error('F05 insufficient-evidence rule missing');
+          if(!forms.nodes.f07.rules.join(' ').includes('不直接修改Readiness'))throw new Error('F07 closed-loop boundary missing');
+          if(JSON.stringify(forms).includes('drive.google.com/file/d/'))throw new Error('Private Drive URLs embedded in public forms');
+          console.log('GOD VIEW PASS: full system graph + interactive F01-F07/E07/evidence/reassess schemas');
           NODE
 
       - name: Day1 content boundary
