@@ -36,12 +36,16 @@ jobs:
           set -euo pipefail
           test -s assets/learning-map.css
           grep -q '#/map' index.html
-          grep -q '人才發展循環地圖' index.html
+          grep -q '人才發展全貌' index.html
+          grep -q '學習模式／詳細模式一鍵切換' index.html
           grep -q 'window.LearningMap' assets/learning-map.js
-          grep -q 'SEMANTIC ZOOM MAP' assets/learning-map.js
+          grep -q 'td-learning-map-mode-v1' assets/learning-map.js
+          grep -q 'data-map-mode="learn"' assets/learning-map.js
+          grep -q 'data-map-mode="detail"' assets/learning-map.js
           grep -q 'lm-overview-ring' assets/learning-map.js
-          grep -q 'lm-child-node' assets/learning-map.js
-          grep -q 'lm-source-pop' assets/learning-map.js
+          grep -q 'lm-learning-micro' assets/learning-map.js
+          grep -q 'lm-detail-k-list' assets/learning-map.js
+          grep -q 'slice(0,limit)' assets/learning-map.js
           ! grep -q 'lm-inline-detail' assets/learning-map.js
           ! grep -R -q 'learning_map_forms' index.html assets sw.js
           test ! -e data/learning_map_forms.js
@@ -50,7 +54,7 @@ jobs:
           ! grep -R -q 'study-policy.js' assets index.html
           ! grep -R -q 'study-flow.js' assets index.html
 
-      - name: Semantic zoom map integrity
+      - name: Dual-mode semantic zoom integrity
         run: |
           set -euo pipefail
           node <<'NODE'
@@ -73,7 +77,7 @@ jobs:
           if(!m.loops?.some(x=>x.from===10&&x.to===1))throw new Error('decision-to-strategy loop missing');
           for(const day of [1,2,3,4,5])if(!m.stages.some(s=>(s.sourceDays||[]).includes(day)))throw new Error(`Day ${day} not mapped as a source`);
           if(d.chapters.length!==40)throw new Error(`expected 40 chapters, got ${d.chapters.length}`);
-          console.log(`SEMANTIC ZOOM MAP PASS: 10 stages / ${m.stages.reduce((n,s)=>n+s.children.length,0)} child concepts / ${d.knowledge.length} knowledge`);
+          console.log(`DUAL MODE MAP PASS: 10 stages / ${m.stages.reduce((n,s)=>n+s.children.length,0)} child concepts / ${d.knowledge.length} knowledge`);
           NODE
 
       - name: Day1 content boundary
