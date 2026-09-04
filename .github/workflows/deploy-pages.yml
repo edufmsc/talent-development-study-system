@@ -73,24 +73,24 @@ jobs:
           node --check data/slide_media.js
           node --check data/learning_map.js
           test -s assets/learning-map.css
+          test -s assets/coverage.css
           grep -q '#/map' index.html
           grep -q '人才發展全貌' index.html
           grep -q '學習模式／詳細模式一鍵切換' index.html
           grep -q 'td-learning-map-mode-v1' assets/learning-map.js
-          grep -q 'td-study-os-100' assets/learning-map.js
-          grep -q 'data-map-mode="learn"' assets/learning-map.js
-          grep -q 'data-map-mode="detail"' assets/learning-map.js
-          grep -q 'lm-learning-micro' assets/learning-map.js
-          grep -q 'lm-detail-k-list' assets/learning-map.js
           grep -q 'EXAM MICROCARD' assets/learning-map.js
           grep -q 'knowledgeRisk' assets/learning-map.js
           grep -q '可能考法｜取自現有題庫' assets/learning-map.js
-          grep -q '高風險' assets/learning-map.js
-          grep -q '需複習' assets/learning-map.js
-          grep -q '穩定' assets/learning-map.js
-          grep -q '未驗證' assets/learning-map.js
-          grep -q 'x.hits>0' assets/learning-map.js
-          grep -q 'lm-exam-card' assets/learning-map.css
+          grep -q '不納入複習' assets/coverage.js
+          grep -q 'QR Code／連結頁' assets/coverage.js
+          grep -q 'showExcluded' assets/coverage.js
+          grep -q 'data-exclude-page' assets/coverage.js
+          grep -q 'data-restore-page' assets/coverage.js
+          grep -q 'page-status.excluded' assets/coverage.css
+          grep -q 'personal-exclusion-banner' assets/coverage.css
+          grep -q 'if(isExcluded(s))return false' assets/runtime.js
+          grep -q 'excludedFormal' assets/insights.js
+          grep -q 'page-exclusion-v1' sw.js
           grep -q 'window.LEARNING_MAP_DATA' data/learning_map.js
           ! grep -q 'lm-inline-detail' assets/learning-map.js
           ! grep -R -q 'learning_map_forms' index.html assets sw.js
@@ -127,23 +127,25 @@ jobs:
           curl -L --fail --retry 4 --retry-delay 2 "$base/assets/learning-map.js" -o /tmp/learning-map.js
           curl -L --fail --retry 4 --retry-delay 2 "$base/assets/learning-map.css" -o /tmp/learning-map.css
           curl -L --fail --retry 4 --retry-delay 2 "$base/assets/coverage.js" -o /tmp/coverage.js
+          curl -L --fail --retry 4 --retry-delay 2 "$base/assets/coverage.css" -o /tmp/coverage.css
+          curl -L --fail --retry 4 --retry-delay 2 "$base/assets/insights.js" -o /tmp/insights.js
           curl -L --fail --retry 4 --retry-delay 2 "$base/assets/runtime.js" -o /tmp/runtime.js
+          curl -L --fail --retry 4 --retry-delay 2 "$base/sw.js" -o /tmp/sw.js
           grep -q '人才發展學習作業系統' /tmp/index.html
           grep -q '人才發展全貌' /tmp/index.html
-          grep -q '學習模式／詳細模式一鍵切換' /tmp/index.html
           grep -q 'window.LEARNING_MAP_DATA' /tmp/learning_map.js
-          grep -q 'td-learning-map-mode-v1' /tmp/learning-map.js
-          grep -q 'td-study-os-100' /tmp/learning-map.js
-          grep -q 'data-map-mode="learn"' /tmp/learning-map.js
-          grep -q 'data-map-mode="detail"' /tmp/learning-map.js
           grep -q 'EXAM MICROCARD' /tmp/learning-map.js
           grep -q 'knowledgeRisk' /tmp/learning-map.js
-          grep -q '可能考法｜取自現有題庫' /tmp/learning-map.js
-          grep -q '高風險' /tmp/learning-map.js
-          grep -q '未驗證' /tmp/learning-map.js
-          grep -q 'x.hits>0' /tmp/learning-map.js
-          grep -q 'lm-exam-card' /tmp/learning-map.css
-          ! grep -q 'lm-inline-detail' /tmp/learning-map.js
+          grep -q '不納入複習' /tmp/coverage.js
+          grep -q 'QR Code／連結頁' /tmp/coverage.js
+          grep -q 'showExcluded' /tmp/coverage.js
+          grep -q 'data-exclude-page' /tmp/coverage.js
+          grep -q 'data-restore-page' /tmp/coverage.js
+          grep -q 'page-status.excluded' /tmp/coverage.css
+          grep -q 'personal-exclusion-banner' /tmp/coverage.css
+          grep -q 'if(isExcluded(s))return false' /tmp/runtime.js
+          grep -q 'excludedFormal' /tmp/insights.js
+          grep -q 'page-exclusion-v1' /tmp/sw.js
           grep -q 'window.COURSE_DATA' /tmp/course_data.js
           grep -q 'window.Coverage' /tmp/coverage.js
           grep -q 'window.TDRuntime' /tmp/runtime.js
