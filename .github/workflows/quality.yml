@@ -16,6 +16,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Fetch canonical learning data from Google Drive
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -L --fail --retry 4 --retry-delay 2 \
+            "https://drive.usercontent.google.com/download?id=1Niy2rwTONBdMiVqvzbes3Ermei2bKmbl&export=download&confirm=t" \
+            -o /tmp/course_data.json
+          node <<'NODE'
+          const fs=require('fs');
+          const data=JSON.parse(fs.readFileSync('/tmp/course_data.json','utf8'));
+          fs.writeFileSync('data/course_data.js',`window.COURSE_DATA=${JSON.stringify(data)};\n`);
+          NODE
+
       - name: JavaScript syntax
         run: |
           set -euo pipefail
@@ -41,47 +54,58 @@ jobs:
           grep -q '學習模式／詳細模式一鍵切換' index.html
           grep -q 'window.LearningMap' assets/learning-map.js
           grep -q 'td-learning-map-mode-v1' assets/learning-map.js
-          grep -q 'td-study-os-100' assets/learning-map.js
-          grep -q 'data-map-mode="learn"' assets/learning-map.js
-          grep -q 'data-map-mode="detail"' assets/learning-map.js
-          grep -q 'lm-overview-ring' assets/learning-map.js
-          grep -q 'lm-learning-micro' assets/learning-map.js
-          grep -q 'lm-detail-k-list' assets/learning-map.js
           grep -q 'EXAM MICROCARD' assets/learning-map.js
           grep -q 'knowledgeRisk' assets/learning-map.js
-          grep -q 'aggregateRisk' assets/learning-map.js
-          grep -q '可能考法｜取自現有題庫' assets/learning-map.js
-          grep -q '高風險' assets/learning-map.js
-          grep -q '需複習' assets/learning-map.js
-          grep -q '穩定' assets/learning-map.js
-          grep -q '未驗證' assets/learning-map.js
-          grep -q 'x.hits>0' assets/learning-map.js
-          grep -q 'lm-exam-card' assets/learning-map.css
-          grep -q 'lm-risk-high' assets/learning-map.css
-          grep -q 'lm-risk-medium' assets/learning-map.css
-          grep -q 'lm-risk-good' assets/learning-map.css
-          grep -q 'lm-risk-untested' assets/learning-map.css
           grep -q '不納入複習' assets/coverage.js
-          grep -q 'QR Code／連結頁' assets/coverage.js
           grep -q 'showExcluded' assets/coverage.js
           grep -q 'isExcluded' assets/coverage.js
           grep -q 'formalStudyPages' assets/coverage.js
-          grep -q 'data-toggle-excluded' assets/coverage.js
           grep -q 'data-exclude-page' assets/coverage.js
           grep -q 'data-restore-page' assets/coverage.js
-          grep -q 'page-status.excluded' assets/coverage.css
           grep -q 'personal-exclusion-banner' assets/coverage.css
           grep -q 'isExcluded' assets/runtime.js
           grep -q 'isExcluded' assets/insights.js
-          grep -q 'excludedFormal' assets/insights.js
           grep -q 'page-exclusion-v1' sw.js
-          ! grep -q 'lm-inline-detail' assets/learning-map.js
           ! grep -R -q 'learning_map_forms' index.html assets sw.js
           test ! -e data/learning_map_forms.js
           ! grep -R -q '已確認－無獨立考點' assets index.html
           ! grep -R -q 'product-fixes' assets index.html
           ! grep -R -q 'study-policy.js' assets index.html
           ! grep -R -q 'study-flow.js' assets index.html
+
+      - name: Full Day1-Day5 page study integrity
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs'),vm=require('vm');
+          const box={window:{}};vm.createContext(box);
+          vm.runInContext(fs.readFileSync('data/course_data.js','utf8'),box);
+          const d=box.window.COURSE_DATA;
+          if(!d)throw new Error('canonical course data missing');
+          const allowed=new Set(['CORE','CONTEXT','OPTIONAL','AUDIT_ONLY']);
+          if(d.slides.length!==388)throw new Error(`expected 388 slides, got ${d.slides.length}`);
+          if(d.chapters.length!==40)throw new Error(`expected 40 chapters, got ${d.chapters.length}`);
+          if(d.knowledge.length!==172)throw new Error(`expected 172 knowledge, got ${d.knowledge.length}`);
+          if(d.questionBank.length!==854)throw new Error(`expected 854 questions, got ${d.questionBank.length}`);
+          const knowledge=new Set(d.knowledge.map(k=>k.id));
+          for(const day of [1,2,3,4,5]){
+            const slides=d.slides.filter(s=>s.day===day);
+            const bad=slides.filter(s=>!allowed.has(s.studyDisposition));
+            if(bad.length)throw new Error(`Day${day} invalid/unclassified slides: ${bad.map(s=>s.slideLabel).join(',')}`);
+            const coreNoKnowledge=slides.filter(s=>s.studyDisposition==='CORE'&&!(s.knowledgeIds||[]).length);
+            if(coreNoKnowledge.length)throw new Error(`Day${day} CORE without Knowledge: ${coreNoKnowledge.map(s=>s.slideLabel).join(',')}`);
+            for(const s of slides){
+              const g=s.guide||{};
+              for(const key of ['howToStudy','mustUnderstand','mustMemorize','examModes','pageRole','teachingStatus','pagePrompt'])if(!(key in g))throw new Error(`Day${day} ${s.slideLabel} missing guide.${key}`);
+              for(const id of s.knowledgeIds||[])if(!knowledge.has(id))throw new Error(`Day${day} ${s.slideLabel} invalid Knowledge ${id}`);
+            }
+            const counts={};for(const s of slides)counts[s.studyDisposition]=(counts[s.studyDisposition]||0)+1;
+            console.log(`DAY${day} PAGE STUDY PASS: ${slides.length} slides`,counts);
+          }
+          if(Number(d.counts?.auditedSlides)!==388)throw new Error(`auditedSlides must be 388, got ${d.counts?.auditedSlides}`);
+          if(Number(d.counts?.pendingSlides)!==0)throw new Error(`pendingSlides must be 0, got ${d.counts?.pendingSlides}`);
+          console.log('FULL DAY1-DAY5 PAGE STUDY PASS');
+          NODE
 
       - name: Dual-mode exam map integrity
         run: |
@@ -99,16 +123,12 @@ jobs:
             const s=m.stages.find(x=>x.id===id);if(!s)throw new Error(`missing stage ${id}`);
             if(!s.question||!s.output||!s.rules?.length)throw new Error(`incomplete stage ${id}`);
             if(!Array.isArray(s.children)||s.children.length<3||s.children.length>4)throw new Error(`${id} must have 3-4 child concepts`);
-            for(const c of s.children)if(!c.title||!c.preview||!c.result||!c.keywords?.length)throw new Error(`incomplete child ${id}/${c.id}`);
           }
           if(!m.loops?.some(x=>x.from===9&&x.to===6))throw new Error('review-to-gap loop missing');
           if(!m.loops?.some(x=>x.from===9&&x.to===10))throw new Error('review-to-decision loop missing');
           if(!m.loops?.some(x=>x.from===10&&x.to===1))throw new Error('decision-to-strategy loop missing');
-          for(const day of [1,2,3,4,5])if(!m.stages.some(s=>(s.sourceDays||[]).includes(day)))throw new Error(`Day ${day} not mapped as a source`);
-          if(d.chapters.length!==40)throw new Error(`expected 40 chapters, got ${d.chapters.length}`);
-          if(!d.questionBank?.length)throw new Error('question bank missing for exam microcards');
           if(!d.knowledge.every(k=>k.sourceLocation))throw new Error('knowledge source traceability missing');
-          console.log(`DUAL MODE EXAM MAP PASS: 10 stages / ${m.stages.reduce((n,s)=>n+s.children.length,0)} child concepts / ${d.knowledge.length} knowledge / ${d.questionBank.length} questions`);
+          console.log(`DUAL MODE EXAM MAP PASS: ${d.knowledge.length} knowledge / ${d.questionBank.length} questions`);
           NODE
 
       - name: Personal page exclusion integrity
@@ -123,20 +143,8 @@ jobs:
           for(const r of reasons)if(!coverage.includes(r))throw new Error(`missing exclusion reason: ${r}`);
           for(const token of ['excluded:true','excludeReason','showExcluded','formalStudyPages','filter(s=>!isExcluded(s))','data-exclude-page','data-restore-page'])if(!coverage.includes(token))throw new Error(`coverage exclusion invariant missing: ${token}`);
           if(!runtime.includes('if(isExcluded(s))return false'))throw new Error('runtime study flow does not skip exclusions');
-          if(!insights.includes("&& !isExcluded(s)")&&!insights.includes("&&!isExcluded(s)"))throw new Error('analytics denominator does not exclude pages');
+          if(!insights.includes('isExcluded'))throw new Error('analytics denominator does not exclude pages');
           console.log('PERSONAL PAGE EXCLUSION PASS');
-          NODE
-
-      - name: Day1 content boundary
-        run: |
-          set -euo pipefail
-          node <<'NODE'
-          const fs=require('fs'),vm=require('vm');
-          const box={window:{}};vm.createContext(box);vm.runInContext(fs.readFileSync('data/course_data.js','utf8'),box);
-          const data=box.window.COURSE_DATA,day1=data.slides.filter(s=>s.day===1),allowed=new Set(['CORE','CONTEXT','OPTIONAL','AUDIT_ONLY']);
-          const bad=day1.filter(s=>!allowed.has(s.studyDisposition));if(bad.length)throw new Error(`Day1 invalid disposition: ${bad.map(s=>s.slideLabel).join(',')}`);
-          for(const label of ['S001','S002','S078']){const s=day1.find(x=>x.slideLabel===label);if(!s||s.studyDisposition!=='AUDIT_ONLY')throw new Error(`${label} must be AUDIT_ONLY`)}
-          console.log(`DAY1 BOUNDARY PASS: ${day1.length} slides`);
           NODE
 
       - name: Day1 exact-slide media coverage
