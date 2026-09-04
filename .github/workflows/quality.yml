@@ -40,12 +40,26 @@ jobs:
           grep -q '學習模式／詳細模式一鍵切換' index.html
           grep -q 'window.LearningMap' assets/learning-map.js
           grep -q 'td-learning-map-mode-v1' assets/learning-map.js
+          grep -q 'td-study-os-100' assets/learning-map.js
           grep -q 'data-map-mode="learn"' assets/learning-map.js
           grep -q 'data-map-mode="detail"' assets/learning-map.js
           grep -q 'lm-overview-ring' assets/learning-map.js
           grep -q 'lm-learning-micro' assets/learning-map.js
           grep -q 'lm-detail-k-list' assets/learning-map.js
-          grep -q 'slice(0,limit)' assets/learning-map.js
+          grep -q 'EXAM MICROCARD' assets/learning-map.js
+          grep -q 'knowledgeRisk' assets/learning-map.js
+          grep -q 'aggregateRisk' assets/learning-map.js
+          grep -q '可能考法｜取自現有題庫' assets/learning-map.js
+          grep -q '高風險' assets/learning-map.js
+          grep -q '需複習' assets/learning-map.js
+          grep -q '穩定' assets/learning-map.js
+          grep -q '未驗證' assets/learning-map.js
+          grep -q 'x.hits>0' assets/learning-map.js
+          grep -q 'lm-exam-card' assets/learning-map.css
+          grep -q 'lm-risk-high' assets/learning-map.css
+          grep -q 'lm-risk-medium' assets/learning-map.css
+          grep -q 'lm-risk-good' assets/learning-map.css
+          grep -q 'lm-risk-untested' assets/learning-map.css
           ! grep -q 'lm-inline-detail' assets/learning-map.js
           ! grep -R -q 'learning_map_forms' index.html assets sw.js
           test ! -e data/learning_map_forms.js
@@ -54,7 +68,7 @@ jobs:
           ! grep -R -q 'study-policy.js' assets index.html
           ! grep -R -q 'study-flow.js' assets index.html
 
-      - name: Dual-mode semantic zoom integrity
+      - name: Dual-mode exam map integrity
         run: |
           set -euo pipefail
           node <<'NODE'
@@ -77,7 +91,9 @@ jobs:
           if(!m.loops?.some(x=>x.from===10&&x.to===1))throw new Error('decision-to-strategy loop missing');
           for(const day of [1,2,3,4,5])if(!m.stages.some(s=>(s.sourceDays||[]).includes(day)))throw new Error(`Day ${day} not mapped as a source`);
           if(d.chapters.length!==40)throw new Error(`expected 40 chapters, got ${d.chapters.length}`);
-          console.log(`DUAL MODE MAP PASS: 10 stages / ${m.stages.reduce((n,s)=>n+s.children.length,0)} child concepts / ${d.knowledge.length} knowledge`);
+          if(!d.questionBank?.length)throw new Error('question bank missing for exam microcards');
+          if(!d.knowledge.every(k=>k.sourceLocation))throw new Error('knowledge source traceability missing');
+          console.log(`DUAL MODE EXAM MAP PASS: 10 stages / ${m.stages.reduce((n,s)=>n+s.children.length,0)} child concepts / ${d.knowledge.length} knowledge / ${d.questionBank.length} questions`);
           NODE
 
       - name: Day1 content boundary
