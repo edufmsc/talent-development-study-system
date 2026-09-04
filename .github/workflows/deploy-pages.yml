@@ -74,14 +74,15 @@ jobs:
           node --check data/learning_map.js
           test -s assets/learning-map.css
           grep -q '#/map' index.html
-          grep -q '人才發展循環地圖' index.html
-          grep -q 'SEMANTIC ZOOM MAP' assets/learning-map.js
-          grep -q 'lm-overview-ring' assets/learning-map.js
-          grep -q 'lm-child-node' assets/learning-map.js
-          grep -q 'lm-source-pop' assets/learning-map.js
-          ! grep -q 'lm-inline-detail' assets/learning-map.js
+          grep -q '人才發展全貌' index.html
+          grep -q '學習模式／詳細模式一鍵切換' index.html
+          grep -q 'td-learning-map-mode-v1' assets/learning-map.js
+          grep -q 'data-map-mode="learn"' assets/learning-map.js
+          grep -q 'data-map-mode="detail"' assets/learning-map.js
+          grep -q 'lm-learning-micro' assets/learning-map.js
+          grep -q 'lm-detail-k-list' assets/learning-map.js
           grep -q 'window.LEARNING_MAP_DATA' data/learning_map.js
-          grep -q '人才發展完整系統地圖' data/learning_map.js
+          ! grep -q 'lm-inline-detail' assets/learning-map.js
           ! grep -R -q 'learning_map_forms' index.html assets sw.js
           test ! -e data/learning_map_forms.js
           ! grep -R -q '已確認－無獨立考點' assets index.html
@@ -117,12 +118,14 @@ jobs:
           curl -L --fail --retry 4 --retry-delay 2 "$base/assets/coverage.js" -o /tmp/coverage.js
           curl -L --fail --retry 4 --retry-delay 2 "$base/assets/runtime.js" -o /tmp/runtime.js
           grep -q '人才發展學習作業系統' /tmp/index.html
-          grep -q '人才發展循環地圖' /tmp/index.html
+          grep -q '人才發展全貌' /tmp/index.html
+          grep -q '學習模式／詳細模式一鍵切換' /tmp/index.html
           grep -q 'window.LEARNING_MAP_DATA' /tmp/learning_map.js
-          grep -q '人才發展完整系統地圖' /tmp/learning_map.js
-          grep -q 'SEMANTIC ZOOM MAP' /tmp/learning-map.js
-          grep -q 'lm-overview-ring' /tmp/learning-map.js
-          grep -q 'lm-child-node' /tmp/learning-map.js
+          grep -q 'td-learning-map-mode-v1' /tmp/learning-map.js
+          grep -q 'data-map-mode="learn"' /tmp/learning-map.js
+          grep -q 'data-map-mode="detail"' /tmp/learning-map.js
+          grep -q 'lm-learning-micro' /tmp/learning-map.js
+          grep -q 'lm-detail-k-list' /tmp/learning-map.js
           ! grep -q 'lm-inline-detail' /tmp/learning-map.js
           grep -q 'window.COURSE_DATA' /tmp/course_data.js
           grep -q 'window.Coverage' /tmp/coverage.js
