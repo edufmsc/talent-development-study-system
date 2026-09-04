@@ -36,16 +36,16 @@ jobs:
           set -euo pipefail
           test -s assets/learning-map.css
           grep -q '#/map' index.html
-          grep -q '課程學習地圖' index.html
+          grep -q '人才發展循環地圖' index.html
           grep -q 'data/learning_map.js' index.html
           grep -q 'assets/learning-map.js' index.html
           grep -q 'window.LearningMap' assets/learning-map.js
           grep -q "p\[0\]==='map'" assets/runtime.js
-          grep -q 'STUDENT GOD VIEW' assets/learning-map.js
-          grep -q 'lm-day-spine' assets/learning-map.js
-          grep -q 'lm-chapter-lane' assets/learning-map.js
-          grep -q 'lm-knowledge-card' assets/learning-map.js
-          grep -q 'sourceRoute' assets/learning-map.js
+          grep -q 'TALENT DEVELOPMENT GOD VIEW' assets/learning-map.js
+          grep -q 'lm-system-canvas' assets/learning-map.js
+          grep -q 'lm-inline-detail' assets/learning-map.js
+          grep -q 'lm-inline-output' assets/learning-map.js
+          grep -q 'lm-flow-chain' assets/learning-map.js
           grep -q '#/slide/' assets/learning-map.js
           ! grep -R -q 'learning_map_forms' index.html assets sw.js
           test ! -e data/learning_map_forms.js
@@ -59,7 +59,7 @@ jobs:
           grep -q '五類考試掌握雷達' assets/insights.js
           ! grep -q '五大核心能力雷達' assets/insights.js
 
-      - name: Student course map integrity
+      - name: Talent development lifecycle map integrity
         run: |
           set -euo pipefail
           node <<'NODE'
@@ -69,23 +69,20 @@ jobs:
           vm.runInContext(fs.readFileSync('data/learning_map.js','utf8'),box);
           const d=box.window.COURSE_DATA,m=box.window.LEARNING_MAP_DATA;
           if(!d||!m)throw new Error('course/map data missing');
+          const expected=['direction','system','standard','assessment','talent-decision','gap-map','development-design','development','review'];
+          if(!Array.isArray(m.stages)||m.stages.length!==expected.length)throw new Error(`expected ${expected.length} lifecycle stages`);
+          for(const id of expected){
+            const s=m.stages.find(x=>x.id===id);if(!s)throw new Error(`missing stage ${id}`);
+            if(!s.question||!s.inputs?.length||!s.process?.length||!s.outputs?.length||!s.rules?.length)throw new Error(`incomplete stage ${id}`);
+            for(const o of s.outputs)if(!o.title||!o.flow?.length)throw new Error(`output flow missing ${id}/${o.id}`);
+          }
+          if(!m.officialBackbone?.includes('願景／使命')||!m.officialBackbone?.includes('OJT／SD'))throw new Error('official course backbone missing');
+          for(const rule of ['Performance ≠ Potential；九宮格 ≠ Readiness。','證據不足 ≠ 能力低；先補證。','Gap ≠ Training Need；先判斷原因。','活動完成 ≠ 能力提升；要用新工作／行為證據回評。'])if(!m.universalRules?.includes(rule))throw new Error(`missing guardrail: ${rule}`);
+          if(!m.returnLinks?.some(x=>x.from==='review'&&x.to==='gap-map'))throw new Error('review-to-gap loop missing');
+          if(!m.returnLinks?.some(x=>x.from==='review'&&x.to==='talent-decision'))throw new Error('review-to-decision loop missing');
+          for(const day of [1,2,3,4,5])if(!m.stages.some(s=>(s.sourceDays||[]).includes(day)))throw new Error(`Day ${day} not mapped as source`);
           if(d.chapters.length!==40)throw new Error(`expected 40 chapters, got ${d.chapters.length}`);
-          for(const day of [1,2,3,4,5]){
-            if(!m.dayMeta?.[day])throw new Error(`dayMeta missing Day ${day}`);
-            if(!d.chapters.some(c=>c.day===day))throw new Error(`course chapters missing Day ${day}`);
-            if(!d.knowledge.some(k=>k.day===day))throw new Error(`knowledge missing Day ${day}`);
-          }
-          const types=(m.learningTypes||[]).map(x=>x.label);
-          for(const x of ['定義','架構','流程步驟','方法','條項'])if(!types.includes(x))throw new Error(`learning type missing ${x}`);
-          if(!m.principle.includes('逐頁教材')||!m.principle.includes('Knowledge'))throw new Error('map responsibility boundary missing');
-          if(!m.sourceRule.includes('原始講義'))throw new Error('source traceability rule missing');
-          for(const c of d.chapters){
-            const ks=d.knowledge.filter(k=>k.chapter===c.id);
-            const ss=d.slides.filter(s=>s.chapter===c.id);
-            if(!ss.length)throw new Error(`${c.id} missing slides`);
-            if(!ks.length)console.log(`NOTE: ${c.id} currently has no Knowledge; content QA still pending`);
-          }
-          console.log(`STUDENT COURSE MAP PASS: 5 days / ${d.chapters.length} chapters / ${d.knowledge.length} knowledge / ${d.slides.length} slides`);
+          console.log(`TALENT LIFECYCLE MAP PASS: ${m.stages.length} stages / ${d.chapters.length} chapters / ${d.knowledge.length} knowledge`);
           NODE
 
       - name: Day1 content boundary
