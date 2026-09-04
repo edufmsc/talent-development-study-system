@@ -45,7 +45,8 @@ jobs:
           grep -q 'lm-day-spine' assets/learning-map.js
           grep -q 'lm-chapter-lane' assets/learning-map.js
           grep -q 'lm-knowledge-card' assets/learning-map.js
-          grep -q '看原始教材' assets/learning-map.js
+          grep -q 'sourceRoute' assets/learning-map.js
+          grep -q '#/slide/' assets/learning-map.js
           ! grep -R -q 'learning_map_forms' index.html assets sw.js
           test ! -e data/learning_map_forms.js
           ! grep -R -q '人才發展閉環控制台' assets index.html
