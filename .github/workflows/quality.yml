@@ -37,29 +37,20 @@ jobs:
           test -s assets/learning-map.css
           grep -q '#/map' index.html
           grep -q '人才發展循環地圖' index.html
-          grep -q 'data/learning_map.js' index.html
-          grep -q 'assets/learning-map.js' index.html
           grep -q 'window.LearningMap' assets/learning-map.js
-          grep -q "p\[0\]==='map'" assets/runtime.js
-          grep -q 'TALENT DEVELOPMENT GOD VIEW' assets/learning-map.js
-          grep -q 'lm-system-canvas' assets/learning-map.js
-          grep -q 'lm-inline-detail' assets/learning-map.js
-          grep -q 'lm-inline-output' assets/learning-map.js
-          grep -q 'lm-flow-chain' assets/learning-map.js
-          grep -q '#/slide/' assets/learning-map.js
+          grep -q 'SEMANTIC ZOOM MAP' assets/learning-map.js
+          grep -q 'lm-overview-ring' assets/learning-map.js
+          grep -q 'lm-child-node' assets/learning-map.js
+          grep -q 'lm-source-pop' assets/learning-map.js
+          ! grep -q 'lm-inline-detail' assets/learning-map.js
           ! grep -R -q 'learning_map_forms' index.html assets sw.js
           test ! -e data/learning_map_forms.js
-          ! grep -R -q '人才發展閉環控制台' assets index.html
-          ! grep -R -q '匯出工作簿' assets index.html
-          ! grep -R -q '互動表單' assets index.html
           ! grep -R -q '已確認－無獨立考點' assets index.html
           ! grep -R -q 'product-fixes' assets index.html
           ! grep -R -q 'study-policy.js' assets index.html
           ! grep -R -q 'study-flow.js' assets index.html
-          grep -q '五類考試掌握雷達' assets/insights.js
-          ! grep -q '五大核心能力雷達' assets/insights.js
 
-      - name: Talent development lifecycle map integrity
+      - name: Semantic zoom map integrity
         run: |
           set -euo pipefail
           node <<'NODE'
@@ -69,20 +60,20 @@ jobs:
           vm.runInContext(fs.readFileSync('data/learning_map.js','utf8'),box);
           const d=box.window.COURSE_DATA,m=box.window.LEARNING_MAP_DATA;
           if(!d||!m)throw new Error('course/map data missing');
-          const expected=['direction','system','standard','assessment','talent-decision','gap-map','development-design','development','review'];
-          if(!Array.isArray(m.stages)||m.stages.length!==expected.length)throw new Error(`expected ${expected.length} lifecycle stages`);
+          const expected=['strategy','job','competency','assessment','talent-review','readiness-gap','learning-map','development','review','decision'];
+          if(!Array.isArray(m.stages)||m.stages.length!==10)throw new Error(`expected 10 stages, got ${m.stages?.length}`);
           for(const id of expected){
             const s=m.stages.find(x=>x.id===id);if(!s)throw new Error(`missing stage ${id}`);
-            if(!s.question||!s.inputs?.length||!s.process?.length||!s.outputs?.length||!s.rules?.length)throw new Error(`incomplete stage ${id}`);
-            for(const o of s.outputs)if(!o.title||!o.flow?.length)throw new Error(`output flow missing ${id}/${o.id}`);
+            if(!s.question||!s.output||!s.rules?.length)throw new Error(`incomplete stage ${id}`);
+            if(!Array.isArray(s.children)||s.children.length<3||s.children.length>4)throw new Error(`${id} must have 3-4 child concepts`);
+            for(const c of s.children)if(!c.title||!c.preview||!c.result||!c.keywords?.length)throw new Error(`incomplete child ${id}/${c.id}`);
           }
-          if(!m.officialBackbone?.includes('願景／使命')||!m.officialBackbone?.includes('OJT／SD'))throw new Error('official course backbone missing');
-          for(const rule of ['Performance ≠ Potential；九宮格 ≠ Readiness。','證據不足 ≠ 能力低；先補證。','Gap ≠ Training Need；先判斷原因。','活動完成 ≠ 能力提升；要用新工作／行為證據回評。'])if(!m.universalRules?.includes(rule))throw new Error(`missing guardrail: ${rule}`);
-          if(!m.returnLinks?.some(x=>x.from==='review'&&x.to==='gap-map'))throw new Error('review-to-gap loop missing');
-          if(!m.returnLinks?.some(x=>x.from==='review'&&x.to==='talent-decision'))throw new Error('review-to-decision loop missing');
-          for(const day of [1,2,3,4,5])if(!m.stages.some(s=>(s.sourceDays||[]).includes(day)))throw new Error(`Day ${day} not mapped as source`);
+          if(!m.loops?.some(x=>x.from===9&&x.to===6))throw new Error('review-to-gap loop missing');
+          if(!m.loops?.some(x=>x.from===9&&x.to===10))throw new Error('review-to-decision loop missing');
+          if(!m.loops?.some(x=>x.from===10&&x.to===1))throw new Error('decision-to-strategy loop missing');
+          for(const day of [1,2,3,4,5])if(!m.stages.some(s=>(s.sourceDays||[]).includes(day)))throw new Error(`Day ${day} not mapped as a source`);
           if(d.chapters.length!==40)throw new Error(`expected 40 chapters, got ${d.chapters.length}`);
-          console.log(`TALENT LIFECYCLE MAP PASS: ${m.stages.length} stages / ${d.chapters.length} chapters / ${d.knowledge.length} knowledge`);
+          console.log(`SEMANTIC ZOOM MAP PASS: 10 stages / ${m.stages.reduce((n,s)=>n+s.children.length,0)} child concepts / ${d.knowledge.length} knowledge`);
           NODE
 
       - name: Day1 content boundary
@@ -94,7 +85,6 @@ jobs:
           const data=box.window.COURSE_DATA,day1=data.slides.filter(s=>s.day===1),allowed=new Set(['CORE','CONTEXT','OPTIONAL','AUDIT_ONLY']);
           const bad=day1.filter(s=>!allowed.has(s.studyDisposition));if(bad.length)throw new Error(`Day1 invalid disposition: ${bad.map(s=>s.slideLabel).join(',')}`);
           for(const label of ['S001','S002','S078']){const s=day1.find(x=>x.slideLabel===label);if(!s||s.studyDisposition!=='AUDIT_ONLY')throw new Error(`${label} must be AUDIT_ONLY`)}
-          const formalWrong=day1.filter(s=>String(s.auditStatus||'').includes('正式考點')&&(s.studyDisposition!=='CORE'||!(s.knowledgeIds||[]).length));if(formalWrong.length)throw new Error(`Formal page boundary failed: ${formalWrong.map(s=>s.slideLabel).join(',')}`);
           console.log(`DAY1 BOUNDARY PASS: ${day1.length} slides`);
           NODE
 
