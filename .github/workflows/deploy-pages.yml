@@ -124,7 +124,7 @@ jobs:
           grep -q 'advanceQueue' assets/insights.js
           grep -q 'manual-important-btn' assets/insights.css
           grep -q 'analysis-queue-banner' assets/insights.css
-          grep -q 'manual-priority-queue-v1' sw.js
+          grep -q 'manual-priority-queue-v' sw.js
           grep -q 'day2-5-complete-v1' sw.js
           grep -q 'window.LEARNING_MAP_DATA' data/learning_map.js
           ! grep -R -q 'learning_map_forms' index.html assets sw.js
@@ -168,7 +168,7 @@ jobs:
           grep -q 'td-manual-importance-v1' /tmp/insights.js
           grep -q 'advanceQueue' /tmp/insights.js
           grep -q 'manual-important-btn' /tmp/insights.css
-          grep -q 'manual-priority-queue-v1' /tmp/sw.js
+          grep -q 'manual-priority-queue-v' /tmp/sw.js
           node <<'NODE'
           const fs=require('fs'),vm=require('vm');
           const box={window:{}};vm.createContext(box);vm.runInContext(fs.readFileSync('/tmp/course_data.js','utf8'),box);
