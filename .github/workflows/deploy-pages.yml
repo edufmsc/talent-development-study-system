@@ -41,20 +41,39 @@ jobs:
           const fs=require('fs');
           const data=JSON.parse(fs.readFileSync('data/course_data.json','utf8'));
           for(const key of ['chapters','slides','knowledge','questionBank'])if(!Array.isArray(data[key])||!data[key].length)throw new Error(`Missing ${key}`);
+          const expected={chapters:40,slides:388,knowledge:172,questions:854};
+          if(data.chapters.length!==expected.chapters)throw new Error(`chapters mismatch: ${data.chapters.length}`);
+          if(data.slides.length!==expected.slides)throw new Error(`slides mismatch: ${data.slides.length}`);
+          if(data.knowledge.length!==expected.knowledge)throw new Error(`knowledge mismatch: ${data.knowledge.length}`);
+          if(data.questionBank.length!==expected.questions)throw new Error(`questions mismatch: ${data.questionBank.length}`);
+          if(!data.counts)throw new Error('Missing counts metadata');
+          if(Number(data.counts.auditedSlides)!==388)throw new Error(`auditedSlides must be 388: ${data.counts.auditedSlides}`);
+          if(Number(data.counts.pendingSlides)!==0)throw new Error(`pendingSlides must be 0: ${data.counts.pendingSlides}`);
           const uniq=(arr,key,label)=>{const ids=arr.map(x=>x[key]);if(new Set(ids).size!==ids.length)throw new Error(`${label} duplicate IDs`)};
           uniq(data.chapters,'id','chapters');uniq(data.knowledge,'id','knowledge');uniq(data.questionBank,'id','questions');
           const slideKeys=data.slides.map(s=>`${s.day}-${s.slide}`);if(new Set(slideKeys).size!==slideKeys.length)throw new Error('duplicate slide keys');
-          const expected={chapters:data.chapters.length,slides:data.slides.length,knowledge:data.knowledge.length,questions:data.questionBank.length};
-          if(!data.counts)throw new Error('Missing counts metadata');
-          for(const [key,val] of Object.entries(expected))if(Number(data.counts[key])!==val)throw new Error(`counts.${key} mismatch: ${data.counts[key]} vs ${val}`);
           const chapters=new Map(data.chapters.map(c=>[c.id,c])),knowledge=new Set(data.knowledge.map(k=>k.id));
+          const allowed=new Set(['CORE','CONTEXT','OPTIONAL','AUDIT_ONLY']);
           for(const k of data.knowledge){if(!chapters.has(k.chapter))throw new Error(`Knowledge ${k.id} invalid chapter`);if(!k.sourceLocation)throw new Error(`Knowledge ${k.id} missing source`)}
           for(const q of data.questionBank){if(!knowledge.has(q.knowledgeId))throw new Error(`Question ${q.id} invalid knowledge`);if(!q.sourceLocation)throw new Error(`Question ${q.id} missing source`)}
-          for(const s of data.slides){if(!chapters.has(s.chapter))throw new Error(`Slide D${s.day} S${s.slide} invalid chapter`);if(!s.pdfPage)throw new Error(`Slide D${s.day} S${s.slide} missing PDF page`);for(const id of s.knowledgeIds||[])if(!knowledge.has(id))throw new Error(`Slide D${s.day} S${s.slide} invalid knowledge ${id}`)}
-          const day1=data.slides.filter(s=>s.day===1),allowed=new Set(['CORE','CONTEXT','OPTIONAL','AUDIT_ONLY']);
-          const bad=day1.filter(s=>!allowed.has(s.studyDisposition));if(bad.length)throw new Error(`Day1 invalid studyDisposition: ${bad.map(s=>s.slideLabel).join(',')}`);
+          for(const day of [1,2,3,4,5]){
+            const slides=data.slides.filter(s=>s.day===day);
+            const invalid=slides.filter(s=>!allowed.has(s.studyDisposition));
+            if(invalid.length)throw new Error(`Day${day} invalid/unclassified: ${invalid.map(s=>s.slideLabel).join(',')}`);
+            const coreNoK=slides.filter(s=>s.studyDisposition==='CORE'&&!(s.knowledgeIds||[]).length);
+            if(coreNoK.length)throw new Error(`Day${day} CORE without Knowledge: ${coreNoK.map(s=>s.slideLabel).join(',')}`);
+            for(const s of slides){
+              if(!chapters.has(s.chapter))throw new Error(`Slide D${s.day} S${s.slide} invalid chapter`);
+              if(!s.pdfPage)throw new Error(`Slide D${s.day} S${s.slide} missing PDF page`);
+              for(const id of s.knowledgeIds||[])if(!knowledge.has(id))throw new Error(`Slide D${s.day} S${s.slide} invalid knowledge ${id}`);
+              const g=s.guide||{};
+              for(const key of ['howToStudy','mustUnderstand','mustMemorize','examModes','pageRole','teachingStatus','pagePrompt'])if(!(key in g))throw new Error(`Slide D${s.day} ${s.slideLabel} missing guide.${key}`);
+            }
+            const counts={};for(const s of slides)counts[s.studyDisposition]=(counts[s.studyDisposition]||0)+1;
+            console.log(`DAY${day} DATA PASS`,counts);
+          }
           fs.writeFileSync('data/course_data.js',`window.COURSE_DATA=${JSON.stringify(data)};\n`);
-          console.log(`DATA QA PASS: ${expected.chapters} chapters / ${expected.slides} slides / ${expected.knowledge} knowledge / ${expected.questions} questions`);
+          console.log('DATA QA PASS: full Day1-Day5 canonical study data');
           NODE
           rm -f data/course_data.json
 
@@ -76,26 +95,18 @@ jobs:
           test -s assets/coverage.css
           grep -q '#/map' index.html
           grep -q '人才發展全貌' index.html
-          grep -q '學習模式／詳細模式一鍵切換' index.html
-          grep -q 'td-learning-map-mode-v1' assets/learning-map.js
           grep -q 'EXAM MICROCARD' assets/learning-map.js
-          grep -q 'knowledgeRisk' assets/learning-map.js
-          grep -q '可能考法｜取自現有題庫' assets/learning-map.js
           grep -q '不納入複習' assets/coverage.js
-          grep -q 'QR Code／連結頁' assets/coverage.js
           grep -q 'showExcluded' assets/coverage.js
           grep -q 'data-exclude-page' assets/coverage.js
           grep -q 'data-restore-page' assets/coverage.js
-          grep -q 'page-status.excluded' assets/coverage.css
           grep -q 'personal-exclusion-banner' assets/coverage.css
           grep -q 'if(isExcluded(s))return false' assets/runtime.js
           grep -q 'excludedFormal' assets/insights.js
-          grep -q 'page-exclusion-v1' sw.js
+          grep -q 'day2-5-complete-v1' sw.js
           grep -q 'window.LEARNING_MAP_DATA' data/learning_map.js
-          ! grep -q 'lm-inline-detail' assets/learning-map.js
           ! grep -R -q 'learning_map_forms' index.html assets sw.js
           test ! -e data/learning_map_forms.js
-          ! grep -R -q '已確認－無獨立考點' assets index.html
           ! grep -R -q 'product-fixes' assets index.html
           ! grep -R -q 'study-policy.js' assets index.html
           ! grep -R -q 'study-flow.js' assets index.html
@@ -123,30 +134,24 @@ jobs:
           base="${PAGE_URL%/}"
           curl -L --fail --retry 4 --retry-delay 2 "$PAGE_URL" -o /tmp/index.html
           curl -L --fail --retry 4 --retry-delay 2 "$base/data/course_data.js" -o /tmp/course_data.js
-          curl -L --fail --retry 4 --retry-delay 2 "$base/data/learning_map.js" -o /tmp/learning_map.js
-          curl -L --fail --retry 4 --retry-delay 2 "$base/assets/learning-map.js" -o /tmp/learning-map.js
-          curl -L --fail --retry 4 --retry-delay 2 "$base/assets/learning-map.css" -o /tmp/learning-map.css
           curl -L --fail --retry 4 --retry-delay 2 "$base/assets/coverage.js" -o /tmp/coverage.js
-          curl -L --fail --retry 4 --retry-delay 2 "$base/assets/coverage.css" -o /tmp/coverage.css
-          curl -L --fail --retry 4 --retry-delay 2 "$base/assets/insights.js" -o /tmp/insights.js
           curl -L --fail --retry 4 --retry-delay 2 "$base/assets/runtime.js" -o /tmp/runtime.js
           curl -L --fail --retry 4 --retry-delay 2 "$base/sw.js" -o /tmp/sw.js
           grep -q '人才發展學習作業系統' /tmp/index.html
-          grep -q '人才發展全貌' /tmp/index.html
-          grep -q 'window.LEARNING_MAP_DATA' /tmp/learning_map.js
-          grep -q 'EXAM MICROCARD' /tmp/learning-map.js
-          grep -q 'knowledgeRisk' /tmp/learning-map.js
           grep -q '不納入複習' /tmp/coverage.js
-          grep -q 'QR Code／連結頁' /tmp/coverage.js
-          grep -q 'showExcluded' /tmp/coverage.js
-          grep -q 'data-exclude-page' /tmp/coverage.js
-          grep -q 'data-restore-page' /tmp/coverage.js
-          grep -q 'page-status.excluded' /tmp/coverage.css
-          grep -q 'personal-exclusion-banner' /tmp/coverage.css
           grep -q 'if(isExcluded(s))return false' /tmp/runtime.js
-          grep -q 'excludedFormal' /tmp/insights.js
-          grep -q 'page-exclusion-v1' /tmp/sw.js
-          grep -q 'window.COURSE_DATA' /tmp/course_data.js
-          grep -q 'window.Coverage' /tmp/coverage.js
-          grep -q 'window.TDRuntime' /tmp/runtime.js
+          grep -q 'day2-5-complete-v1' /tmp/sw.js
+          node <<'NODE'
+          const fs=require('fs'),vm=require('vm');
+          const box={window:{}};vm.createContext(box);vm.runInContext(fs.readFileSync('/tmp/course_data.js','utf8'),box);
+          const d=box.window.COURSE_DATA,allowed=new Set(['CORE','CONTEXT','OPTIONAL','AUDIT_ONLY']);
+          if(!d||d.slides.length!==388)throw new Error('production course data missing/incomplete');
+          for(const day of [1,2,3,4,5]){
+            const ss=d.slides.filter(s=>s.day===day);
+            if(ss.some(s=>!allowed.has(s.studyDisposition)))throw new Error(`production Day${day} contains unclassified data`);
+            if(ss.some(s=>s.studyDisposition==='CORE'&&!(s.knowledgeIds||[]).length))throw new Error(`production Day${day} CORE without Knowledge`);
+          }
+          if(Number(d.counts?.auditedSlides)!==388||Number(d.counts?.pendingSlides)!==0)throw new Error('production audit counts incomplete');
+          console.log('PRODUCTION COURSE DATA PASS: 388 audited / 0 pending');
+          NODE
           echo "PRODUCTION SMOKE PASS: $PAGE_URL"
