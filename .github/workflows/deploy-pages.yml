@@ -54,7 +54,6 @@ jobs:
           for(const q of data.questionBank){if(!knowledge.has(q.knowledgeId))throw new Error(`Question ${q.id} invalid knowledge`);if(!q.sourceLocation)throw new Error(`Question ${q.id} missing source`)}
           for(const s of data.slides){if(!chapters.has(s.chapter))throw new Error(`Slide D${s.day} S${s.slide} invalid chapter`);if(!s.pdfPage)throw new Error(`Slide D${s.day} S${s.slide} missing PDF page`);for(const id of s.knowledgeIds||[])if(!knowledge.has(id))throw new Error(`Slide D${s.day} S${s.slide} invalid knowledge ${id}`)}
           for(const c of data.chapters){const ss=data.slides.filter(s=>s.chapter===c.id).map(s=>s.slide).sort((a,b)=>a-b);if(!ss.length)throw new Error(`${c.id} has no slide coverage`);if(ss[0]!==c.slideStart||ss[ss.length-1]!==c.slideEnd)throw new Error(`${c.id} slide range mismatch: ${ss[0]}-${ss[ss.length-1]} vs ${c.slideStart}-${c.slideEnd}`);for(let n=c.slideStart;n<=c.slideEnd;n++)if(!ss.includes(n))throw new Error(`${c.id} missing slide ${n}`)}
-
           const day1=data.slides.filter(s=>s.day===1),day1K=data.knowledge.filter(k=>k.day===1);
           const formalNoK=day1.filter(s=>String(s.auditStatus||'').includes('正式考點')&&!(s.knowledgeIds||[]).length);if(formalNoK.length)throw new Error(`Day1 formal pages without Knowledge: ${formalNoK.map(s=>s.slideLabel).join(',')}`);
           const guideCount=new Set(day1.map(s=>s.guide?.howToStudy).filter(Boolean)).size;if(guideCount<20)throw new Error(`Day1 page teaching guides are too generic: only ${guideCount} unique guides`);
@@ -66,7 +65,6 @@ jobs:
           const contextsWithK=day1.filter(s=>s.studyDisposition==='CONTEXT'&&(s.knowledgeIds||[]).length);if(contextsWithK.length)throw new Error(`CONTEXT pages unexpectedly own Knowledge: ${contextsWithK.map(s=>s.slideLabel).join(',')}`);
           if(!data.studyPolicy?.version)throw new Error('Missing studyPolicy metadata');
           const flow=day1.filter(s=>['CORE','CONTEXT'].includes(s.studyDisposition));if(flow.some(s=>['S001','S002','S078'].includes(s.slideLabel)))throw new Error('AUDIT_ONLY leaked into formal flow');
-
           fs.writeFileSync('data/course_data.js',`window.COURSE_DATA=${JSON.stringify(data)};\n`);
           console.log(`DATA QA PASS: ${expected.chapters} chapters / ${expected.slides} slides / ${expected.knowledge} knowledge / ${expected.questions} questions`);
           console.log(`DAY1 QA PASS: ${day1.length} slides / ${day1K.length} knowledge / 0 formal pages without Knowledge / ${guideCount} unique guides`);
@@ -78,6 +76,7 @@ jobs:
         run: |
           set -euo pipefail
           node --check assets/app.js
+          node --check assets/learning-map.js
           node --check assets/coverage.js
           node --check assets/slide-preview.js
           node --check assets/insights.js
@@ -86,10 +85,21 @@ jobs:
           node --check sw.js
           node --check data/course_data.js
           node --check data/slide_media.js
+          node --check data/learning_map.js
+          node --check data/learning_map_forms.js
+          test -s assets/learning-map.css
           test -s assets/coverage.css
           test -s assets/insights.css
           test -s assets/slide-preview.css
           test -s data/slide_media.js
+          grep -q '#/map' index.html
+          grep -q 'data/learning_map.js' index.html
+          grep -q 'data/learning_map_forms.js' index.html
+          grep -q 'assets/learning-map.js' index.html
+          grep -q 'SYSTEM GOD VIEW' assets/learning-map.js
+          grep -q 'data-lm-field' assets/learning-map.js
+          grep -q 'window.LEARNING_MAP_FORMS' data/learning_map_forms.js
+          grep -q 'td-learning-map-workbook-v1' data/learning_map_forms.js
           grep -q '#/slides' index.html
           grep -q 'data/slide_media.js' index.html
           grep -q 'assets/coverage.js' index.html
@@ -139,10 +149,20 @@ jobs:
           curl -L --fail --retry 4 --retry-delay 2 "$PAGE_URL" -o /tmp/index.html
           curl -L --fail --retry 4 --retry-delay 2 "$base/data/course_data.js" -o /tmp/course_data.js
           curl -L --fail --retry 4 --retry-delay 2 "$base/data/slide_media.js" -o /tmp/slide_media.js
+          curl -L --fail --retry 4 --retry-delay 2 "$base/data/learning_map.js" -o /tmp/learning_map.js
+          curl -L --fail --retry 4 --retry-delay 2 "$base/data/learning_map_forms.js" -o /tmp/learning_map_forms.js
+          curl -L --fail --retry 4 --retry-delay 2 "$base/assets/learning-map.js" -o /tmp/learning-map.js
           curl -L --fail --retry 4 --retry-delay 2 "$base/assets/coverage.js" -o /tmp/coverage.js
           curl -L --fail --retry 4 --retry-delay 2 "$base/assets/runtime.js" -o /tmp/runtime.js
           curl -L --fail --retry 4 --retry-delay 2 "$base/assets/insights.js" -o /tmp/insights.js
           grep -q '人才發展學習作業系統' /tmp/index.html
+          grep -q '#/map' /tmp/index.html
+          grep -q 'data/learning_map_forms.js' /tmp/index.html
+          grep -q 'window.LEARNING_MAP_DATA' /tmp/learning_map.js
+          grep -q 'window.LEARNING_MAP_FORMS' /tmp/learning_map_forms.js
+          grep -q 'td-learning-map-workbook-v1' /tmp/learning_map_forms.js
+          grep -q 'SYSTEM GOD VIEW' /tmp/learning-map.js
+          grep -q 'data-lm-field' /tmp/learning-map.js
           grep -q '#/slides' /tmp/index.html
           grep -q 'assets/runtime.js' /tmp/index.html
           ! grep -q 'product-fixes' /tmp/index.html
