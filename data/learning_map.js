@@ -1,129 +1,71 @@
 window.LEARNING_MAP_DATA={
-  version:'2026-09-04-talent-lifecycle-v4',
+  version:'2026-09-04-semantic-zoom-v5',
   title:'人才發展完整系統地圖',
-  subtitle:'不是依 Day 排課，而是從組織方向一路走到人才標準、辨識、發展、證據與回評的完整循環。Day1～Day5只作為教材來源。',
-  sourceBoundary:'主幹依認證班官方課程架構與 Day1～Day5 教材整合；「新證據回評」與 Readiness／People Risk 更新為課程與專案成果整合出的閉環學習模型。',
-  officialBackbone:['願景／使命','公司策略／事業策略','策略性人才資本管理系統建立','策略性人才資本管理系統管理','人才辨識與評鑑','專業能力盤點與學習地圖規劃','OJT／SD','Off-JT'],
+  subtitle:'先看10環完整閉環；一次只展開一環、一次只學一個子概念。',
+  sourceBoundary:'10環主架構依 Day1～Day5 教材邏輯與專案整合架構整理；Day1～Day5只作教材來源，不是流程步驟。',
   stages:[
-    {
-      id:'direction',step:1,title:'組織方向',short:'Why｜往哪裡走？',sourceDays:[1],
-      question:'公司要去哪裡？人才發展要支援什麼？',
-      inputs:['願景／使命','公司策略／事業策略','組織與工作變化'],
-      process:['釐清願景、使命與企業策略','把策略轉成關鍵工作與人才需求','確認人才發展優先順序'],
-      outputs:[
-        {id:'talent-needs',title:'策略人才需求',flow:['願景／使命','企業／事業策略','關鍵成功要求','關鍵工作／角色','人才需求／優先順序']}
-      ],
-      rules:['人才發展不是從「要開什麼課」開始，而是先回答組織要達成什麼。','策略或工作改變時，後面的職能標準與發展內容也要重新檢視。'],
-      keywords:['使命','願景','價值觀','企業策略','HR策略','策略性人力資源']
-    },
-    {
-      id:'system',step:2,title:'人才策略與系統',short:'System｜怎麼管理人才？',sourceDays:[1,2],
-      question:'要用什麼制度把策略、人才與發展串起來？',
-      inputs:['策略人才需求','現有人資制度／人才資料','人才供給與風險'],
-      process:['HR策略與企業營運策略連結','建立／管理策略性人才資本管理系統','配置高潛力人才、關鍵人才、接班、人才績效指標、人才風險與個人發展等管理機制'],
-      outputs:[
-        {id:'talent-architecture',title:'人才管理架構',flow:['企業策略','HR／人才策略','人才制度與管理機制','人才資料與決策節點','發展與回饋機制']}
-      ],
-      rules:['制度要能支援後續決策，不是只有表單存在。','人才資料各自存在，不等於已形成共同的人才決策流程。'],
-      keywords:['人才資本管理','高潛力','關鍵能力人才','接班','人才風險','個人發展計畫','人才管理績效指標']
-    },
-    {
-      id:'standard',step:3,title:'職務／Competency標準',short:'Standard｜成功長什麼樣？',sourceDays:[1,4],
-      question:'這個職務做成功，到底需要什麼工作、知識技能、行為與職能？',
-      inputs:['策略人才需求','Job／職位說明','Duty／Task／工作事件'],
-      process:['Job → Duty → Task 拆解','Task → Behavior／K/S','K/S＋成功行為 → Competency','定義 Behavior／Level 並做 Validation'],
-      outputs:[
-        {id:'competency-model',title:'Competency／職位人才標準',flow:['Job','Duty','Task','Behavior／K/S','Competency','Behavior Criteria／Level','Validation']},
-        {id:'success-profile',title:'成功人才輪廓',flow:['關鍵工作','成功行為','必要知識技能','職能要求','目標等級／可觀察標準']}
-      ],
-      rules:['JD 不等於 Competency；JD 說工作責任，Competency 要描述做成功需要的能力與行為。','沒有目標標準，就無法客觀比較人才現況、Gap 或 Readiness。'],
-      keywords:['Job','Duty','Task','K/S','Competency','職能模型','行為準則','職能發展流程','Validation']
-    },
-    {
-      id:'assessment',step:4,title:'人才辨識與評鑑',short:'Evidence｜憑什麼判斷？',sourceDays:[1,3],
-      question:'如何取得可信、可觀察的人才證據？',
-      inputs:['人才／職能標準','評鑑目的','待評估人才'],
-      process:['先確認評鑑目的','定義成功標準／Dimensions','依目的選工具：360、評鑑中心、面談、STAR、多來源觀察等','實施、觀察、記錄行為與結果','整合證據形成判斷'],
-      outputs:[
-        {id:'evidence-profile',title:'人才證據檔案',flow:['評鑑目的','成功標準','選工具','實施／觀察','記錄行為','整合多來源證據','形成證據檔案']},
-        {id:'assessment-center',title:'評鑑中心證據鏈',flow:['目標職位／Dimensions','選模擬情境','讓行為發生','評審觀察／記錄','分類／評等','整合評鑑結果']}
-      ],
-      rules:['先決定要回答什麼人才問題，再選評鑑工具。','Performance 不等於 Potential。','證據不足不等於能力低；先補證。','工具結果要回到共同的成功標準比較。'],
-      keywords:['人才辨識','評鑑','360','評鑑中心','STAR','Potential','Performance','行為證據','多來源']
-    },
-    {
-      id:'talent-decision',step:5,title:'Talent Review／接班與人才風險',short:'Decision｜誰要管？風險在哪？',sourceDays:[2,3],
-      question:'有了人才證據後，如何形成人才分流、接班與風險決策？',
-      inputs:['Performance','Potential與證據','目標職位標準／候選人才'],
-      process:['Talent Review／校準','Performance × Potential 做人才分流','對目標職位做 Readiness 比較','計算／判斷 Succession Coverage','辨識 People Risk 與管理優先順序'],
-      outputs:[
-        {id:'talent-review',title:'Talent Review／人才分流',flow:['Performance','Potential＋證據','校準討論','九宮格／人才分流','候選池／後續行動']},
-        {id:'succession-risk',title:'Readiness／Coverage／People Risk',flow:['目標職位標準','候選人證據','職位適配／Readiness','有效Coverage','People Risk','管理優先順序']}
-      ],
-      rules:['九宮格是人才分流工具，不等於特定職位 Readiness。','有候選人名單不等於有人 Ready。','高績效×高潛力仍需回到目標職位標準比較。'],
-      keywords:['Talent Review','九宮格','人才盤點','校準','Readiness','Succession Coverage','People Risk','接班','高潛力']
-    },
-    {
-      id:'gap-map',step:6,title:'能力 Gap／Learning Map',short:'Gap｜差什麼？要學什麼？',sourceDays:[4],
-      question:'目標要求與目前能力之間差多少？差距應怎麼轉成學習路徑？',
-      inputs:['目標 Competency／Level','現況能力證據','Duty／Task 與工作情境'],
-      process:['Target vs Current 比較','確認 Gap 與證據充分度','分析 Gap 原因','定義 Learning Need／可觀察成果','建立 Learning Map／學習路徑'],
-      outputs:[
-        {id:'gap-analysis',title:'Competency Gap',flow:['Target Competency','現況證據','比較','Gap／待補證','優先差距']},
-        {id:'learning-map',title:'Learning Map',flow:['Duty／Task','K/S','Competency','Gap','Learning Need／成果','學習主題／路徑','發展方法']}
-      ],
-      rules:['有 Gap 不代表一定要訓練。','證據不足時，先補證，不硬算 Gap。','Learning Map 應從工作與能力差距出發，不只是課程清單。'],
-      keywords:['能力盤點','Gap','Learning Map','Duty','Task','K/S','Learning Need','專業能力盤點']
-    },
-    {
-      id:'development-design',step:7,title:'IDP／發展設計',short:'Plan｜怎麼補？',sourceDays:[2,4,5],
-      question:'哪些差距最重要？要用什麼發展任務與方法組合？',
-      inputs:['優先 Gap／Learning Map','工作情境','可用資源與時間'],
-      process:['選 2～3 個優先發展項目','定義可觀察的發展成果','選擇適合的方法組合','設計工作任務、責任、支持與 Review 節點','先定義成功證據'],
-      outputs:[
-        {id:'idp',title:'IDP／個人發展計畫',flow:['優先Gap','發展成果','方法組合','具體工作任務','Owner／支持資源','成功證據','Review節點']}
-      ],
-      rules:['發展成果要描述「能做到什麼／產出什麼」，不是只列活動。','不要所有 Gap 都塞進同一期 IDP。','方法要對應 Gap 原因，而不是看到 Gap 就排課。'],
-      keywords:['IDP','個人發展計畫','SMARTA','發展計畫','Learning Map','發展需求']
-    },
-    {
-      id:'development',step:8,title:'發展執行｜OJT／SD／Off-JT',short:'Develop｜真的去做',sourceDays:[4,5],
-      question:'如何把發展真正放進工作與學習活動中？',
-      inputs:['IDP／發展成果','工作任務','主管／Mentor／學習資源'],
-      process:['依需要組合 Off-JT、OJT、SD','把知識學習轉成工作任務與練習','主管／Mentor觀察與回饋','循環修正與再實作'],
-      outputs:[
-        {id:'development-cycle',title:'發展執行循環',flow:['Gap／發展成果','Off-JT取得知識方法','OJT在工作中練習','SD自主補強','回饋／修正','再次實作']},
-        {id:'ojt-cycle',title:'系統化 OJT',flow:['Plan','Do','Check','Act','再Plan／持續改善']}
-      ],
-      rules:['Off-JT、OJT、SD 是不同發展方式，可依需求組合。','OJT 不是「丟到現場自己做」；需要目標、任務、觀察、回饋與修正。'],
-      keywords:['OJT','SD','Off-JT','工作中訓練','自我發展','PDCA','訓練規劃','Mentoring']
-    },
-    {
-      id:'review',step:9,title:'新證據／成效／回評',short:'Review｜真的變強了嗎？',sourceDays:[1,2,3,5],
-      question:'完成發展後，如何證明能力有改變，並更新人才決策？',
-      inputs:['工作成果','行為觀察','發展／學習紀錄','主管與多來源證據'],
-      process:['蒐集新的工作／行為證據','比較原目標 Competency／成功標準','判斷 Gap 是否縮小','重新評估 Readiness／人才判斷','更新 Coverage／People Risk／下一輪 IDP','若策略或工作改變，回頭更新人才標準'],
-      outputs:[
-        {id:'evidence-loop',title:'新證據回評閉環',flow:['發展活動／工作實作','新工作／行為證據','對照成功標準','Gap／Readiness重評','Talent Review／People Risk更新','下一輪發展／標準修正']},
-        {id:'learning-effectiveness',title:'學習／發展成效',flow:['學習活動','行為改變','工作應用／成果','證據','成效判斷','改善下一輪']}
-      ],
-      rules:['完成課程、OJT 或 IDP 活動 ≠ 能力提升。','只有新證據才能支持重評。','證據不足就維持原判，不為了「有進步」而硬升級。'],
-      keywords:['行為改變','訓練成效','學習成效','Review','回評','新證據','績效發展','Behaviour Change']
-    }
+    {id:'strategy',step:1,title:'Strategy／MVV',question:'企業要去哪裡？需要什麼人才？',sourceDays:[1],output:'策略人才需求',rules:['先有策略與工作需求，才談人才與課程。'],children:[
+      {id:'mvv',title:'使命／願景／價值觀',preview:'先確定組織存在的目的、方向與共同準則。',result:'組織方向',keywords:['使命','願景','價值觀']},
+      {id:'business-strategy',title:'企業／事業策略',preview:'辨識組織真正要達成的營運與競爭重點。',result:'關鍵策略要求',keywords:['企業策略','事業策略','策略']},
+      {id:'talent-need',title:'人才需求轉譯',preview:'把策略要求翻成人才、角色與能力需求。',result:'策略人才需求',keywords:['人才需求','策略性人力資源','HR策略']}
+    ]},
+    {id:'job',step:2,title:'工作／職位要求',question:'這個職位做成功，到底要做什麼？',sourceDays:[1,4],output:'目標工作輪廓',rules:['JD是輸入，不等於Competency。'],children:[
+      {id:'job-role',title:'Job／Role',preview:'先界定職位存在目的與責任範圍。',result:'職位目的／責任',keywords:['Job','職位','職務']},
+      {id:'duty',title:'Duty',preview:'把職位拆成主要職責／工作領域。',result:'Duty清單',keywords:['Duty']},
+      {id:'task',title:'Task',preview:'再拆成可觀察、可執行的工作任務。',result:'Task清單',keywords:['Task']},
+      {id:'work-output',title:'Output／工作事件',preview:'確認工作做到好的成果與關鍵事件。',result:'成功工作證據',keywords:['Output','工作事件','Critical Incident']}
+    ]},
+    {id:'competency',step:3,title:'Competency職能標準',question:'做成功需要什麼能力與行為？',sourceDays:[1,4],output:'Target Competency',rules:['職能必須可定義、可觀察、可評鑑。'],children:[
+      {id:'ks',title:'K／S',preview:'從Task找出需要的Knowledge與Skill。',result:'K/S需求',keywords:['Knowledge','Skill','K/S','知識','技能']},
+      {id:'competency-model',title:'Competency',preview:'把K/S與成功行為整合成可跨情境使用的職能。',result:'Competency項目',keywords:['Competency','職能']},
+      {id:'behavior',title:'Behavior Criteria',preview:'把抽象職能轉成可觀察的工作行為。',result:'行為準則',keywords:['Behavior','行為準則','行為指標']},
+      {id:'level',title:'Level／Validation',preview:'定目標等級，再由主管／SME驗證是否符合工作。',result:'Target Level',keywords:['Level','Validation','職能等級']}
+    ]},
+    {id:'assessment',step:4,title:'人才辨識與評鑑',question:'我們憑什麼判斷這個人？',sourceDays:[1,3],output:'人才證據檔案',rules:['Performance ≠ Potential；證據不足 ≠ 能力低。'],children:[
+      {id:'performance',title:'Performance',preview:'看目前職位已發生的工作結果與表現。',result:'績效證據',keywords:['Performance','績效']},
+      {id:'potential',title:'Potential',preview:'看未來承擔更高／更複雜責任的可能性。',result:'潛力判斷',keywords:['Potential','潛力']},
+      {id:'tools',title:'評鑑工具',preview:'依目的選360、評鑑中心、面談、心理測驗等工具。',result:'多來源評鑑資料',keywords:['360','評鑑中心','心理測驗','結構式職能面談']},
+      {id:'behavior-evidence',title:'STAR／行為證據',preview:'把觀察轉成可追溯的情境、行動與結果證據。',result:'可觀察證據',keywords:['STAR','行為證據','行為觀察']}
+    ]},
+    {id:'talent-review',step:5,title:'Talent Review',question:'人才要怎麼校準、分流與進入接班評估？',sourceDays:[2,3],output:'人才分流／候選池',rules:['九宮格是人才分流，不等於特定職位Readiness。'],children:[
+      {id:'calibration',title:'Panel校準',preview:'讓不同主管用共同證據與標準討論人才。',result:'一致判斷',keywords:['校準','Panel','Talent Review']},
+      {id:'nine-box',title:'Performance × Potential',preview:'用兩個不同維度做人才分流，不混成單一分數。',result:'九宮格／人才分流',keywords:['九宮格','Performance','Potential']},
+      {id:'candidate-pool',title:'候選池／後續行動',preview:'決定誰進一步做接班、發展或補證。',result:'候選人與後續行動',keywords:['候選池','人才盤點','高潛力']}
+    ]},
+    {id:'readiness-gap',step:6,title:'Readiness／Gap',question:'距離目標職位還有多遠？差在哪裡？',sourceDays:[2,4],output:'Readiness＋優先Gap',rules:['證據不足先補證；不要硬算Gap。'],children:[
+      {id:'conditions',title:'必要條件',preview:'先看資格、經驗與重要歷練是否具備。',result:'條件符合度',keywords:['必要條件','資格','經驗']},
+      {id:'target-current',title:'Target vs Current',preview:'用同一個Competency／Level比較目標與現況。',result:'能力比較',keywords:['Target','Current','目標等級','現況能力']},
+      {id:'gap',title:'Competency Gap',preview:'找出真正差距與需要補證的地方。',result:'優先Gap',keywords:['Competency Gap','Gap','能力落差']},
+      {id:'readiness',title:'Readiness',preview:'綜合條件、Gap、實戰與證據判斷何時能接。',result:'Ready Now／1–2 Years／2+ Years',keywords:['Readiness','Ready Now']}
+    ]},
+    {id:'learning-map',step:7,title:'Learning Map／IDP',question:'差距確定後，要怎麼補？',sourceDays:[2,4,5],output:'Learning Map／IDP',rules:['Gap ≠ Training Need；不要看到Gap就排課。'],children:[
+      {id:'priority-gap',title:'優先Gap',preview:'不是全部都做，先選最影響目標角色的2～3項。',result:'發展優先順序',keywords:['優先Gap','Gap']},
+      {id:'learning-need',title:'Learning Need／成果',preview:'先定義最後要能做到什麼，不先選課。',result:'可觀察發展成果',keywords:['Learning Need','學習需求','發展成果']},
+      {id:'map-method',title:'Learning Map',preview:'把工作、能力差距與學習／發展路徑串起來。',result:'學習地圖',keywords:['Learning Map','學習地圖']},
+      {id:'idp',title:'IDP',preview:'把優先Gap轉成具體任務、方法、證據與Review。',result:'個人發展計畫',keywords:['IDP','個人發展計畫']}
+    ]},
+    {id:'development',step:8,title:'OJT／SD／Off-JT',question:'用什麼方式讓能力真的在工作中長出來？',sourceDays:[4,5],output:'發展任務／實作經驗',rules:['OJT不是丟去做；要有目標、觀察、回饋與修正。'],children:[
+      {id:'method-choice',title:'方法選擇',preview:'依Gap原因選OJT、SD、Off-JT、Project、Mentoring等。',result:'方法組合',keywords:['OJT','SD','Off-JT','Mentoring','Project']},
+      {id:'ojt',title:'OJT',preview:'在真實工作中練習、觀察、回饋與修正。',result:'工作中能力發展',keywords:['OJT','工作中訓練','PDCA']},
+      {id:'sd',title:'SD',preview:'由學習者主動規劃與補強自己的能力。',result:'自主發展行動',keywords:['SD','自我發展']},
+      {id:'offjt',title:'Off-JT／其他',preview:'需要知識、方法或跨情境輸入時搭配課程、專案或Mentoring。',result:'補充學習／發展經驗',keywords:['Off-JT','課程','Mentoring','Project']}
+    ]},
+    {id:'review',step:9,title:'新證據／回評',question:'完成發展後，真的變強了嗎？',sourceDays:[1,2,3,5],output:'更新後的Gap／Readiness',rules:['活動完成 ≠ 能力提升；只有新證據能支持重評。'],children:[
+      {id:'new-evidence',title:'新工作／行為證據',preview:'重新看工作成果、行為與主管／多來源觀察。',result:'新證據包',keywords:['新證據','行為改變','工作證據']},
+      {id:'gap-review',title:'Gap重評',preview:'拿新證據重新和Target Competency比較。',result:'Gap變化',keywords:['Gap','重新評估','回評']},
+      {id:'readiness-review',title:'Readiness重評',preview:'確認是否真的更接近目標職位。',result:'更新Readiness',keywords:['Readiness','重評']},
+      {id:'effectiveness',title:'成效判斷',preview:'看是否有工作應用與成果，不只看完課或滿意度。',result:'學習／發展成效',keywords:['訓練成效','學習成效','行為改變']}
+    ]},
+    {id:'decision',step:10,title:'人才／接班決策',question:'現在可以做什麼人才與接班決策？',sourceDays:[2,5],output:'人才決策＋下一輪',rules:['人才決策要能被新證據更新，不是一評定終身。'],children:[
+      {id:'coverage',title:'Succession Coverage',preview:'確認關鍵職位是否真的有可用的接班覆蓋。',result:'有效Coverage',keywords:['Succession Coverage','接班覆蓋']},
+      {id:'risk',title:'People Risk',preview:'把職位影響、Coverage與最佳Readiness轉成風險視角。',result:'People Risk',keywords:['People Risk','人才風險']},
+      {id:'succession-decision',title:'人才／接班行動',preview:'決定立即接任、持續發展、補證或其他人才行動。',result:'人才決策',keywords:['接班','人才決策','後續行動']},
+      {id:'restart',title:'下一輪',preview:'策略、工作或人才狀態改變，就重新啟動標準與發展循環。',result:'下一輪人才發展',keywords:['Review','下一輪','更新']}
+    ]}
   ],
-  returnLinks:[
-    {from:'review',to:'assessment',label:'新證據 → 再辨識／再評鑑'},
-    {from:'review',to:'talent-decision',label:'新證據 → Readiness／Risk更新'},
-    {from:'review',to:'gap-map',label:'新證據 → Gap重評'},
-    {from:'review',to:'direction',label:'策略／工作改變 → 重啟循環'},
-    {from:'standard',to:'assessment',label:'人才標準 → 評鑑標準'},
-    {from:'standard',to:'gap-map',label:'目標標準 → Gap比較'}
-  ],
-  universalRules:[
-    'Strategy／工作要求先於課程與發展方法。',
-    'Performance ≠ Potential；九宮格 ≠ Readiness。',
-    '證據不足 ≠ 能力低；先補證。',
-    'Gap ≠ Training Need；先判斷原因。',
-    '活動完成 ≠ 能力提升；要用新工作／行為證據回評。'
+  loops:[
+    {from:9,to:6,label:'新證據 → Gap／Readiness重評'},
+    {from:9,to:10,label:'新證據 → 人才／接班決策'},
+    {from:10,to:1,label:'策略／人才需求改變 → 重啟循環'}
   ]
 };
