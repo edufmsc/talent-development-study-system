@@ -20,6 +20,7 @@ jobs:
         run: |
           set -euo pipefail
           node --check assets/app.js
+          node --check assets/learning-map.js
           node --check assets/coverage.js
           node --check assets/slide-preview.js
           node --check assets/insights.js
@@ -28,17 +29,26 @@ jobs:
           node --check sw.js
           node --check data/course_data.js
           node --check data/slide_media.js
+          node --check data/learning_map.js
 
       - name: Architecture invariants
         run: |
           set -euo pipefail
+          test -s assets/learning-map.css
           test -s assets/coverage.css
           test -s assets/insights.css
           test -s assets/slide-preview.css
+          grep -q '#/map' index.html
+          grep -q 'data/learning_map.js' index.html
+          grep -q 'assets/learning-map.js' index.html
+          grep -q 'assets/learning-map.css' index.html
           grep -q 'assets/coverage.js' index.html
           grep -q 'assets/slide-preview.js' index.html
           grep -q 'assets/insights.js' index.html
           grep -q 'assets/runtime.js' index.html
+          grep -q 'window.LearningMap' assets/learning-map.js
+          grep -q "p\[0\]==='map'" assets/runtime.js
+          grep -q 'window.LEARNING_MAP_DATA' data/learning_map.js
           grep -q 'window.Coverage' assets/coverage.js
           grep -q 'window.SlidePreview' assets/slide-preview.js
           grep -q 'window.Insights' assets/insights.js
@@ -54,6 +64,28 @@ jobs:
           grep -q '五類考試掌握雷達' assets/insights.js
           ! grep -q '五大核心能力雷達' assets/insights.js
           grep -q '不代表完整的人才發展專業能力' assets/insights.js
+
+      - name: Learning map integrity
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs'),vm=require('vm');
+          const code=fs.readFileSync('data/learning_map.js','utf8');
+          const box={window:{}};vm.createContext(box);vm.runInContext(code,box);
+          const map=box.window.LEARNING_MAP_DATA;
+          if(!map)throw new Error('LEARNING_MAP_DATA missing');
+          const expected=['strategy','f01','f02','f03','f04','f05','f06','e07','f07','evidence','reassess'];
+          const ids=map.systemFlow.map(x=>x.id);
+          for(const id of expected)if(!ids.includes(id))throw new Error(`Learning map missing ${id}`);
+          if(new Set(ids).size!==ids.length)throw new Error('Learning map duplicate node IDs');
+          if(map.learningMapSteps.length!==8)throw new Error(`E07 Learning Map expected 8 steps, got ${map.learningMapSteps.length}`);
+          if(map.transitionGaps.length!==3)throw new Error(`Transition Learning Map expected 3 priority gaps, got ${map.transitionGaps.length}`);
+          const e07=map.systemFlow.find(x=>x.id==='e07');
+          if(!e07||!e07.purpose.includes('F05')||!e07.purpose.includes('F07'))throw new Error('E07 bridge boundary missing');
+          if(!map.sourceBoundary.includes('不以完成課程直接推論能力提升'))throw new Error('Evidence boundary missing');
+          if(JSON.stringify(map).includes('drive.google.com/file/d/'))throw new Error('Private Drive file URLs must not be embedded in public learning map data');
+          console.log('LEARNING MAP PASS: system flow + 8-step E07 + 3 priority gaps');
+          NODE
 
       - name: Day1 content boundary
         run: |
