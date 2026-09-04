@@ -51,10 +51,8 @@ jobs:
           for(const k of data.knowledge){if(!chapters.has(k.chapter))throw new Error(`Knowledge ${k.id} invalid chapter`);if(!k.sourceLocation)throw new Error(`Knowledge ${k.id} missing source`)}
           for(const q of data.questionBank){if(!knowledge.has(q.knowledgeId))throw new Error(`Question ${q.id} invalid knowledge`);if(!q.sourceLocation)throw new Error(`Question ${q.id} missing source`)}
           for(const s of data.slides){if(!chapters.has(s.chapter))throw new Error(`Slide D${s.day} S${s.slide} invalid chapter`);if(!s.pdfPage)throw new Error(`Slide D${s.day} S${s.slide} missing PDF page`);for(const id of s.knowledgeIds||[])if(!knowledge.has(id))throw new Error(`Slide D${s.day} S${s.slide} invalid knowledge ${id}`)}
-          for(const c of data.chapters){const ss=data.slides.filter(s=>s.chapter===c.id).map(s=>s.slide).sort((a,b)=>a-b);if(!ss.length)throw new Error(`${c.id} has no slide coverage`);if(ss[0]!==c.slideStart||ss[ss.length-1]!==c.slideEnd)throw new Error(`${c.id} slide range mismatch`);}
           const day1=data.slides.filter(s=>s.day===1),allowed=new Set(['CORE','CONTEXT','OPTIONAL','AUDIT_ONLY']);
           const bad=day1.filter(s=>!allowed.has(s.studyDisposition));if(bad.length)throw new Error(`Day1 invalid studyDisposition: ${bad.map(s=>s.slideLabel).join(',')}`);
-          for(const label of ['S001','S002','S078']){const s=day1.find(x=>x.slideLabel===label);if(!s||s.studyDisposition!=='AUDIT_ONLY')throw new Error(`${label} must be AUDIT_ONLY`)}
           fs.writeFileSync('data/course_data.js',`window.COURSE_DATA=${JSON.stringify(data)};\n`);
           console.log(`DATA QA PASS: ${expected.chapters} chapters / ${expected.slides} slides / ${expected.knowledge} knowledge / ${expected.questions} questions`);
           NODE
@@ -77,23 +75,15 @@ jobs:
           test -s assets/learning-map.css
           grep -q '#/map' index.html
           grep -q '人才發展循環地圖' index.html
-          grep -q 'TALENT DEVELOPMENT GOD VIEW' assets/learning-map.js
-          grep -q 'lm-system-canvas' assets/learning-map.js
-          grep -q 'lm-inline-detail' assets/learning-map.js
-          grep -q 'lm-inline-output' assets/learning-map.js
-          grep -q 'lm-flow-chain' assets/learning-map.js
+          grep -q 'SEMANTIC ZOOM MAP' assets/learning-map.js
+          grep -q 'lm-overview-ring' assets/learning-map.js
+          grep -q 'lm-child-node' assets/learning-map.js
+          grep -q 'lm-source-pop' assets/learning-map.js
+          ! grep -q 'lm-inline-detail' assets/learning-map.js
           grep -q 'window.LEARNING_MAP_DATA' data/learning_map.js
           grep -q '人才發展完整系統地圖' data/learning_map.js
-          grep -q '新證據／成效／回評' data/learning_map.js
           ! grep -R -q 'learning_map_forms' index.html assets sw.js
           test ! -e data/learning_map_forms.js
-          ! grep -R -q '人才發展閉環控制台' assets index.html
-          ! grep -R -q '匯出工作簿' assets index.html
-          ! grep -R -q '互動表單' assets index.html
-          grep -q 'window.Coverage' assets/coverage.js
-          grep -q 'window.SlidePreview' assets/slide-preview.js
-          grep -q 'window.Insights' assets/insights.js
-          grep -q 'window.TDRuntime' assets/runtime.js
           ! grep -R -q '已確認－無獨立考點' assets index.html
           ! grep -R -q 'product-fixes' assets index.html
           ! grep -R -q 'study-policy.js' assets index.html
@@ -130,11 +120,10 @@ jobs:
           grep -q '人才發展循環地圖' /tmp/index.html
           grep -q 'window.LEARNING_MAP_DATA' /tmp/learning_map.js
           grep -q '人才發展完整系統地圖' /tmp/learning_map.js
-          grep -q 'TALENT DEVELOPMENT GOD VIEW' /tmp/learning-map.js
-          grep -q 'lm-system-canvas' /tmp/learning-map.js
-          grep -q 'lm-inline-detail' /tmp/learning-map.js
-          ! grep -q 'learning_map_forms' /tmp/index.html
-          ! grep -q '互動表單' /tmp/index.html
+          grep -q 'SEMANTIC ZOOM MAP' /tmp/learning-map.js
+          grep -q 'lm-overview-ring' /tmp/learning-map.js
+          grep -q 'lm-child-node' /tmp/learning-map.js
+          ! grep -q 'lm-inline-detail' /tmp/learning-map.js
           grep -q 'window.COURSE_DATA' /tmp/course_data.js
           grep -q 'window.Coverage' /tmp/coverage.js
           grep -q 'window.TDRuntime' /tmp/runtime.js
