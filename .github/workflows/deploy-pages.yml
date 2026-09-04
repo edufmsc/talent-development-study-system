@@ -76,13 +76,15 @@ jobs:
           node --check data/learning_map.js
           test -s assets/learning-map.css
           grep -q '#/map' index.html
-          grep -q '課程學習地圖' index.html
-          grep -q 'STUDENT GOD VIEW' assets/learning-map.js
-          grep -q 'lm-day-spine' assets/learning-map.js
-          grep -q 'lm-chapter-lane' assets/learning-map.js
-          grep -q 'lm-knowledge-card' assets/learning-map.js
-          grep -q '看原始教材' assets/learning-map.js
+          grep -q '人才發展循環地圖' index.html
+          grep -q 'TALENT DEVELOPMENT GOD VIEW' assets/learning-map.js
+          grep -q 'lm-system-canvas' assets/learning-map.js
+          grep -q 'lm-inline-detail' assets/learning-map.js
+          grep -q 'lm-inline-output' assets/learning-map.js
+          grep -q 'lm-flow-chain' assets/learning-map.js
           grep -q 'window.LEARNING_MAP_DATA' data/learning_map.js
+          grep -q '人才發展完整系統地圖' data/learning_map.js
+          grep -q '新證據／成效／回評' data/learning_map.js
           ! grep -R -q 'learning_map_forms' index.html assets sw.js
           test ! -e data/learning_map_forms.js
           ! grep -R -q '人才發展閉環控制台' assets index.html
@@ -125,11 +127,12 @@ jobs:
           curl -L --fail --retry 4 --retry-delay 2 "$base/assets/coverage.js" -o /tmp/coverage.js
           curl -L --fail --retry 4 --retry-delay 2 "$base/assets/runtime.js" -o /tmp/runtime.js
           grep -q '人才發展學習作業系統' /tmp/index.html
-          grep -q '課程學習地圖' /tmp/index.html
+          grep -q '人才發展循環地圖' /tmp/index.html
           grep -q 'window.LEARNING_MAP_DATA' /tmp/learning_map.js
-          grep -q 'STUDENT GOD VIEW' /tmp/learning-map.js
-          grep -q 'lm-day-spine' /tmp/learning-map.js
-          grep -q 'lm-knowledge-card' /tmp/learning-map.js
+          grep -q '人才發展完整系統地圖' /tmp/learning_map.js
+          grep -q 'TALENT DEVELOPMENT GOD VIEW' /tmp/learning-map.js
+          grep -q 'lm-system-canvas' /tmp/learning-map.js
+          grep -q 'lm-inline-detail' /tmp/learning-map.js
           ! grep -q 'learning_map_forms' /tmp/index.html
           ! grep -q '互動表單' /tmp/index.html
           grep -q 'window.COURSE_DATA' /tmp/course_data.js
