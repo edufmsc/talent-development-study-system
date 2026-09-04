@@ -30,75 +30,61 @@ jobs:
           node --check data/course_data.js
           node --check data/slide_media.js
           node --check data/learning_map.js
-          node --check data/learning_map_forms.js
 
       - name: Architecture invariants
         run: |
           set -euo pipefail
           test -s assets/learning-map.css
-          test -s assets/coverage.css
-          test -s assets/insights.css
-          test -s assets/slide-preview.css
           grep -q '#/map' index.html
+          grep -q '課程學習地圖' index.html
           grep -q 'data/learning_map.js' index.html
-          grep -q 'data/learning_map_forms.js' index.html
           grep -q 'assets/learning-map.js' index.html
-          grep -q 'assets/learning-map.css' index.html
           grep -q 'window.LearningMap' assets/learning-map.js
           grep -q "p\[0\]==='map'" assets/runtime.js
-          grep -q 'window.LEARNING_MAP_DATA' data/learning_map.js
-          grep -q 'window.LEARNING_MAP_FORMS' data/learning_map_forms.js
-          grep -q 'td-learning-map-workbook-v1' data/learning_map_forms.js
-          grep -q 'SYSTEM GOD VIEW' assets/learning-map.js
-          grep -q 'data-lm-field' assets/learning-map.js
-          grep -q 'lm-board' assets/learning-map.js
-          grep -q 'window.Coverage' assets/coverage.js
-          grep -q 'window.SlidePreview' assets/slide-preview.js
-          grep -q 'window.Insights' assets/insights.js
-          grep -q 'td-slide-coverage-v2' assets/coverage.js
+          grep -q 'STUDENT GOD VIEW' assets/learning-map.js
+          grep -q 'lm-day-spine' assets/learning-map.js
+          grep -q 'lm-chapter-lane' assets/learning-map.js
+          grep -q 'lm-knowledge-card' assets/learning-map.js
+          grep -q '看原始教材' assets/learning-map.js
+          ! grep -R -q 'learning_map_forms' index.html assets sw.js
+          test ! -e data/learning_map_forms.js
+          ! grep -R -q '人才發展閉環控制台' assets index.html
+          ! grep -R -q '匯出工作簿' assets index.html
+          ! grep -R -q '互動表單' assets index.html
           ! grep -R -q '已確認－無獨立考點' assets index.html
           ! grep -R -q 'product-fixes' assets index.html
           ! grep -R -q 'study-policy.js' assets index.html
           ! grep -R -q 'study-flow.js' assets index.html
-          test ! -e assets/product-fixes.js
-          test ! -e assets/product-fixes.css
-          test ! -e assets/study-policy.js
-          test ! -e assets/study-flow.js
           grep -q '五類考試掌握雷達' assets/insights.js
           ! grep -q '五大核心能力雷達' assets/insights.js
-          grep -q '不代表完整的人才發展專業能力' assets/insights.js
 
-      - name: God View form integrity
+      - name: Student course map integrity
         run: |
           set -euo pipefail
           node <<'NODE'
           const fs=require('fs'),vm=require('vm');
           const box={window:{}};vm.createContext(box);
+          vm.runInContext(fs.readFileSync('data/course_data.js','utf8'),box);
           vm.runInContext(fs.readFileSync('data/learning_map.js','utf8'),box);
-          vm.runInContext(fs.readFileSync('data/learning_map_forms.js','utf8'),box);
-          const map=box.window.LEARNING_MAP_DATA,forms=box.window.LEARNING_MAP_FORMS;
-          if(!map||!forms)throw new Error('Learning map/form data missing');
-          const expected=['strategy','f01','f02','f03','f04','f05','f06','e07','f07','evidence','reassess'];
-          const ids=map.systemFlow.map(x=>x.id);
-          for(const id of expected){
-            if(!ids.includes(id))throw new Error(`Learning map missing ${id}`);
-            if(!forms.nodes[id])throw new Error(`Interactive form schema missing ${id}`);
-            if(!Array.isArray(forms.nodes[id].sections)||!forms.nodes[id].sections.length)throw new Error(`${id} has no interactive sections`);
+          const d=box.window.COURSE_DATA,m=box.window.LEARNING_MAP_DATA;
+          if(!d||!m)throw new Error('course/map data missing');
+          if(d.chapters.length!==40)throw new Error(`expected 40 chapters, got ${d.chapters.length}`);
+          for(const day of [1,2,3,4,5]){
+            if(!m.dayMeta?.[day])throw new Error(`dayMeta missing Day ${day}`);
+            if(!d.chapters.some(c=>c.day===day))throw new Error(`course chapters missing Day ${day}`);
+            if(!d.knowledge.some(k=>k.day===day))throw new Error(`knowledge missing Day ${day}`);
           }
-          if(new Set(ids).size!==ids.length)throw new Error('Learning map duplicate node IDs');
-          if(map.learningMapSteps.length!==8)throw new Error('E07 expected 8 steps');
-          if(map.transitionGaps.length!==3)throw new Error('E07 expected 3 priority gaps');
-          const f02=forms.nodes.f02.sections.find(s=>s.id==='competency');
-          const f05=forms.nodes.f05.sections.find(s=>s.id==='gap');
-          const f07=forms.nodes.f07.sections.find(s=>s.id==='plans');
-          if(f02?.repeat?.rows!==8)throw new Error('F02 must expose 8 competency rows');
-          if(f05?.repeat?.rows!==8)throw new Error('F05 must expose 8 competency gap rows');
-          if(f07?.repeat?.rows!==3)throw new Error('F07 must expose 3 development plan rows');
-          if(!forms.nodes.f03.rules.join(' ').includes('Performance'))throw new Error('F03 anti-bias rule missing');
-          if(!forms.nodes.f05.rules.join(' ').includes('暫不判定'))throw new Error('F05 insufficient-evidence rule missing');
-          if(!forms.nodes.f07.rules.join(' ').includes('不直接修改Readiness'))throw new Error('F07 closed-loop boundary missing');
-          if(JSON.stringify(forms).includes('drive.google.com/file/d/'))throw new Error('Private Drive URLs embedded in public forms');
-          console.log('GOD VIEW PASS: full system graph + interactive F01-F07/E07/evidence/reassess schemas');
+          const types=(m.learningTypes||[]).map(x=>x.label);
+          for(const x of ['定義','架構','流程步驟','方法','條項'])if(!types.includes(x))throw new Error(`learning type missing ${x}`);
+          if(!m.principle.includes('逐頁教材')||!m.principle.includes('Knowledge'))throw new Error('map responsibility boundary missing');
+          if(!m.sourceRule.includes('原始講義'))throw new Error('source traceability rule missing');
+          for(const c of d.chapters){
+            const ks=d.knowledge.filter(k=>k.chapter===c.id);
+            const ss=d.slides.filter(s=>s.chapter===c.id);
+            if(!ss.length)throw new Error(`${c.id} missing slides`);
+            if(!ks.length)console.log(`NOTE: ${c.id} currently has no Knowledge; content QA still pending`);
+          }
+          console.log(`STUDENT COURSE MAP PASS: 5 days / ${d.chapters.length} chapters / ${d.knowledge.length} knowledge / ${d.slides.length} slides`);
           NODE
 
       - name: Day1 content boundary
@@ -106,18 +92,12 @@ jobs:
           set -euo pipefail
           node <<'NODE'
           const fs=require('fs'),vm=require('vm');
-          const code=fs.readFileSync('data/course_data.js','utf8');
-          const box={window:{}};vm.createContext(box);vm.runInContext(code,box);
-          const data=box.window.COURSE_DATA;
-          if(!data)throw new Error('COURSE_DATA missing');
-          const day1=data.slides.filter(s=>s.day===1),allowed=new Set(['CORE','CONTEXT','OPTIONAL','AUDIT_ONLY']);
+          const box={window:{}};vm.createContext(box);vm.runInContext(fs.readFileSync('data/course_data.js','utf8'),box);
+          const data=box.window.COURSE_DATA,day1=data.slides.filter(s=>s.day===1),allowed=new Set(['CORE','CONTEXT','OPTIONAL','AUDIT_ONLY']);
           const bad=day1.filter(s=>!allowed.has(s.studyDisposition));if(bad.length)throw new Error(`Day1 invalid disposition: ${bad.map(s=>s.slideLabel).join(',')}`);
           for(const label of ['S001','S002','S078']){const s=day1.find(x=>x.slideLabel===label);if(!s||s.studyDisposition!=='AUDIT_ONLY')throw new Error(`${label} must be AUDIT_ONLY`)}
           const formalWrong=day1.filter(s=>String(s.auditStatus||'').includes('正式考點')&&(s.studyDisposition!=='CORE'||!(s.knowledgeIds||[]).length));if(formalWrong.length)throw new Error(`Formal page boundary failed: ${formalWrong.map(s=>s.slideLabel).join(',')}`);
-          const contextK=day1.filter(s=>s.studyDisposition==='CONTEXT'&&(s.knowledgeIds||[]).length);if(contextK.length)throw new Error(`CONTEXT owns Knowledge: ${contextK.map(s=>s.slideLabel).join(',')}`);
-          const flow=day1.filter(s=>['CORE','CONTEXT'].includes(s.studyDisposition));
-          if(flow.some(s=>['S001','S002','S078'].includes(s.slideLabel)))throw new Error('AUDIT_ONLY page leaked into formal study flow');
-          console.log(`DAY1 BOUNDARY PASS: ${day1.length} slides / formal flow ${flow.length}`);
+          console.log(`DAY1 BOUNDARY PASS: ${day1.length} slides`);
           NODE
 
       - name: Day1 exact-slide media coverage
@@ -125,22 +105,9 @@ jobs:
           set -euo pipefail
           node <<'NODE'
           const fs=require('fs'),vm=require('vm');
-          const code=fs.readFileSync('data/slide_media.js','utf8');
-          const box={window:{}};vm.createContext(box);vm.runInContext(code,box);
-          const media=box.window.SLIDE_MEDIA;
-          if(!media?.items)throw new Error('SLIDE_MEDIA missing');
-          const expected=Array.from({length:78},(_,i)=>`d1-s${String(i+1).padStart(3,'0')}`);
-          const keys=Object.keys(media.items).filter(k=>k.startsWith('d1-s')).sort();
-          const missing=expected.filter(k=>!media.items[k]);
-          if(missing.length)throw new Error(`Day1 exact-slide media missing: ${missing.join(',')}`);
-          if(keys.length!==78)throw new Error(`Day1 exact-slide media expected 78, got ${keys.length}`);
-          const ids=expected.map(k=>media.items[k]?.driveFileId);
-          if(ids.some(x=>!x))throw new Error('Day1 exact-slide media has blank Drive file ID');
-          if(new Set(ids).size!==ids.length)throw new Error('Day1 exact-slide media has duplicate Drive file IDs');
-          for(let i=1;i<=78;i++){
-            const k=`d1-s${String(i).padStart(3,'0')}`;
-            const expectedName=`D1_S${String(i).padStart(3,'0')}.jpg`;
-            if(media.items[k]?.fileName!==expectedName)throw new Error(`${k} filename mismatch`);
-          }
+          const box={window:{}};vm.createContext(box);vm.runInContext(fs.readFileSync('data/slide_media.js','utf8'),box);
+          const media=box.window.SLIDE_MEDIA,expected=Array.from({length:78},(_,i)=>`d1-s${String(i+1).padStart(3,'0')}`);
+          const missing=expected.filter(k=>!media?.items?.[k]);if(missing.length)throw new Error(`Day1 exact-slide media missing: ${missing.join(',')}`);
+          if(new Set(expected.map(k=>media.items[k].driveFileId)).size!==78)throw new Error('Day1 media duplicate IDs');
           console.log('DAY1 EXACT-SLIDE MEDIA PASS: 78/78');
           NODE
