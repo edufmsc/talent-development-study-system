@@ -5,6 +5,7 @@
 .lm-output-steps.portfolio{grid-template-columns:1fr 1fr;align-items:stretch}
 .lm-output-steps.portfolio>i{grid-column:1/-1}
 .lm-output-steps.portfolio .lm-output-final{grid-column:1/-1}
+.source-review-badge{display:inline-flex;align-items:center;width:max-content;margin-left:6px;padding:4px 8px;border:1px solid #b9ddcc;border-radius:999px;background:#edf8f3;color:#21694f;font-size:10.5px;font-weight:900;line-height:1.2}.source-review-badge.corrected{border-color:#dfc184;background:#fff7e8;color:#8b6118}.lm-exam-head .source-review-badge{margin:6px 0 0}.page-head .source-review-badge{margin-left:8px}.quick-card .source-review-badge{margin-left:0}
 @media(max-width:900px){
   .lm-racetrack{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important;padding:12px!important;align-items:stretch}
   .lm-track-row{display:grid!important;grid-template-columns:1fr!important;gap:8px!important;overflow:visible!important;padding:0!important;justify-content:stretch!important;align-content:start!important}
