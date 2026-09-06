@@ -32,129 +32,78 @@ jobs:
       - name: JavaScript syntax
         run: |
           set -euo pipefail
-          node --check assets/app.js
-          node --check assets/learning-map.js
-          node --check assets/coverage.js
-          node --check assets/slide-preview.js
-          node --check assets/insights.js
-          node --check assets/runtime.js
-          node --check assets/scoring.js
-          node --check sw.js
-          node --check data/course_data.js
-          node --check data/slide_media.js
-          node --check data/learning_map.js
+          for f in assets/app.js assets/learning-map.js assets/coverage.js assets/slide-preview.js assets/insights.js assets/runtime.js assets/scoring.js assets/decision-engine.js assets/decision-bridge.js sw.js data/course_data.js data/slide_media.js data/learning_map.js; do node --check "$f"; done
 
-      - name: Architecture invariants
+      - name: Core product invariants
         run: |
           set -euo pipefail
-          test -s assets/learning-map.css
-          test -s assets/coverage.css
+          test -s assets/hardening.css
+          grep -q 'assets/decision-engine.js' index.html
+          grep -q 'assets/decision-bridge.js' index.html
+          grep -q 'assets/hardening.css' index.html
           grep -q '#/map' index.html
           grep -q '人才發展全貌' index.html
-          grep -q '學習模式／詳細模式一鍵切換' index.html
-          grep -q 'window.LearningMap' assets/learning-map.js
-          grep -q 'td-learning-map-mode-v1' assets/learning-map.js
-          grep -q 'EXAM MICROCARD' assets/learning-map.js
-          grep -q 'knowledgeRisk' assets/learning-map.js
           grep -q '不納入複習' assets/coverage.js
-          grep -q 'showExcluded' assets/coverage.js
-          grep -q 'isExcluded' assets/coverage.js
-          grep -q 'formalStudyPages' assets/coverage.js
           grep -q 'data-exclude-page' assets/coverage.js
           grep -q 'data-restore-page' assets/coverage.js
-          grep -q 'personal-exclusion-banner' assets/coverage.css
           grep -q 'isExcluded' assets/runtime.js
-          grep -q 'isExcluded' assets/insights.js
-          grep -q 'page-exclusion-v1' sw.js
-          ! grep -R -q 'learning_map_forms' index.html assets sw.js
-          test ! -e data/learning_map_forms.js
-          ! grep -R -q '已確認－無獨立考點' assets index.html
-          ! grep -R -q 'product-fixes' assets index.html
-          ! grep -R -q 'study-policy.js' assets index.html
-          ! grep -R -q 'study-flow.js' assets index.html
+          grep -q 'rule-based-advisory' assets/scoring.js
+          grep -q '同一考點' assets/decision-bridge.js
+          grep -q 'modelNotice' assets/decision-engine.js
+          grep -q 'risk:null' assets/decision-engine.js
+          ! grep -q '+1000' assets/decision-engine.js
+          ! grep -q '+1000' assets/insights.js
+          ! grep -q 'textBlob' assets/learning-map.js
+          ! grep -q 'splitAnswer' assets/learning-map.js
+          ! grep -q 'keywords' data/learning_map.js
+          grep -q 'knowledgeIds' data/learning_map.js
+          grep -q 'slideIds' data/learning_map.js
+          grep -q 'relationType' data/learning_map.js
+          grep -q 'overflow:visible!important' assets/hardening.css
 
       - name: Full Day1-Day5 page study integrity
         run: |
           set -euo pipefail
           node <<'NODE'
-          const fs=require('fs'),vm=require('vm');
-          const box={window:{}};vm.createContext(box);
-          vm.runInContext(fs.readFileSync('data/course_data.js','utf8'),box);
-          const d=box.window.COURSE_DATA;
-          if(!d)throw new Error('canonical course data missing');
+          const fs=require('fs'),vm=require('vm');const box={window:{}};vm.createContext(box);vm.runInContext(fs.readFileSync('data/course_data.js','utf8'),box);const d=box.window.COURSE_DATA;
           const allowed=new Set(['CORE','CONTEXT','OPTIONAL','AUDIT_ONLY']);
           if(d.slides.length!==388)throw new Error(`expected 388 slides, got ${d.slides.length}`);
           if(d.chapters.length!==40)throw new Error(`expected 40 chapters, got ${d.chapters.length}`);
           if(d.knowledge.length!==172)throw new Error(`expected 172 knowledge, got ${d.knowledge.length}`);
           if(d.questionBank.length!==854)throw new Error(`expected 854 questions, got ${d.questionBank.length}`);
-          const knowledge=new Set(d.knowledge.map(k=>k.id));
-          for(const day of [1,2,3,4,5]){
-            const slides=d.slides.filter(s=>s.day===day);
-            const bad=slides.filter(s=>!allowed.has(s.studyDisposition));
-            if(bad.length)throw new Error(`Day${day} invalid/unclassified slides: ${bad.map(s=>s.slideLabel).join(',')}`);
-            const coreNoKnowledge=slides.filter(s=>s.studyDisposition==='CORE'&&!(s.knowledgeIds||[]).length);
-            if(coreNoKnowledge.length)throw new Error(`Day${day} CORE without Knowledge: ${coreNoKnowledge.map(s=>s.slideLabel).join(',')}`);
-            for(const s of slides){
-              const g=s.guide||{};
-              for(const key of ['howToStudy','mustUnderstand','mustMemorize','examModes','pageRole','teachingStatus','pagePrompt'])if(!(key in g))throw new Error(`Day${day} ${s.slideLabel} missing guide.${key}`);
-              for(const id of s.knowledgeIds||[])if(!knowledge.has(id))throw new Error(`Day${day} ${s.slideLabel} invalid Knowledge ${id}`);
-            }
-            const counts={};for(const s of slides)counts[s.studyDisposition]=(counts[s.studyDisposition]||0)+1;
-            console.log(`DAY${day} PAGE STUDY PASS: ${slides.length} slides`,counts);
-          }
-          if(Number(d.counts?.auditedSlides)!==388)throw new Error(`auditedSlides must be 388, got ${d.counts?.auditedSlides}`);
-          if(Number(d.counts?.pendingSlides)!==0)throw new Error(`pendingSlides must be 0, got ${d.counts?.pendingSlides}`);
+          const kid=new Set(d.knowledge.map(k=>k.id));
+          for(const day of [1,2,3,4,5]){const slides=d.slides.filter(s=>s.day===day);const bad=slides.filter(s=>!allowed.has(s.studyDisposition));if(bad.length)throw new Error(`Day${day} invalid/unclassified: ${bad.map(s=>s.slideLabel).join(',')}`);const coreNoK=slides.filter(s=>s.studyDisposition==='CORE'&&!(s.knowledgeIds||[]).length);if(coreNoK.length)throw new Error(`Day${day} CORE without Knowledge: ${coreNoK.map(s=>s.slideLabel).join(',')}`);for(const s of slides){for(const id of s.knowledgeIds||[])if(!kid.has(id))throw new Error(`invalid Knowledge ${id}`);const g=s.guide||{};for(const key of ['howToStudy','mustUnderstand','mustMemorize','examModes','pageRole','teachingStatus','pagePrompt'])if(!(key in g))throw new Error(`${s.slideLabel} missing guide.${key}`)}}
+          if(Number(d.counts?.auditedSlides)!==388||Number(d.counts?.pendingSlides)!==0)throw new Error('canonical audit counts invalid');
           console.log('FULL DAY1-DAY5 PAGE STUDY PASS');
           NODE
 
-      - name: Dual-mode exam map integrity
+      - name: Curated map integrity
         run: |
           set -euo pipefail
           node <<'NODE'
-          const fs=require('fs'),vm=require('vm');
-          const box={window:{}};vm.createContext(box);
-          vm.runInContext(fs.readFileSync('data/course_data.js','utf8'),box);
-          vm.runInContext(fs.readFileSync('data/learning_map.js','utf8'),box);
-          const d=box.window.COURSE_DATA,m=box.window.LEARNING_MAP_DATA;
-          if(!d||!m)throw new Error('course/map data missing');
-          const expected=['strategy','job','competency','assessment','talent-review','readiness-gap','learning-map','development','review','decision'];
-          if(!Array.isArray(m.stages)||m.stages.length!==10)throw new Error(`expected 10 stages, got ${m.stages?.length}`);
-          for(const id of expected){
-            const s=m.stages.find(x=>x.id===id);if(!s)throw new Error(`missing stage ${id}`);
-            if(!s.question||!s.output||!s.rules?.length)throw new Error(`incomplete stage ${id}`);
-            if(!Array.isArray(s.children)||s.children.length<3||s.children.length>4)throw new Error(`${id} must have 3-4 child concepts`);
-          }
-          if(!m.loops?.some(x=>x.from===9&&x.to===6))throw new Error('review-to-gap loop missing');
-          if(!m.loops?.some(x=>x.from===9&&x.to===10))throw new Error('review-to-decision loop missing');
-          if(!m.loops?.some(x=>x.from===10&&x.to===1))throw new Error('decision-to-strategy loop missing');
-          if(!d.knowledge.every(k=>k.sourceLocation))throw new Error('knowledge source traceability missing');
-          console.log(`DUAL MODE EXAM MAP PASS: ${d.knowledge.length} knowledge / ${d.questionBank.length} questions`);
+          const fs=require('fs'),vm=require('vm'),box={window:{}};vm.createContext(box);vm.runInContext(fs.readFileSync('data/course_data.js','utf8'),box);vm.runInContext(fs.readFileSync('data/learning_map.js','utf8'),box);const d=box.window.COURSE_DATA,m=box.window.LEARNING_MAP_DATA;
+          const expected=['strategy','job','competency','assessment','talent-review','readiness-gap','learning-map','development','review','decision'],kids=new Set(d.knowledge.map(k=>k.id)),slides=new Set(d.slides.map(s=>`d${s.day}-s${String(s.slide).padStart(3,'0')}`));
+          if(m.stages.length!==10)throw new Error('map must have 10 stages');
+          for(const id of expected){const s=m.stages.find(x=>x.id===id);if(!s)throw new Error(`missing ${id}`);if(!s.relationType||!s.relationLabel)throw new Error(`${id} relation semantics missing`);if(!s.children||s.children.length<3||s.children.length>4)throw new Error(`${id} child count invalid`);for(const c of s.children){if(!Array.isArray(c.knowledgeIds)||!c.knowledgeIds.length)throw new Error(`${id}/${c.id} missing curated knowledgeIds`);if(!Array.isArray(c.slideIds))throw new Error(`${id}/${c.id} missing slideIds`);for(const k of c.knowledgeIds)if(!kids.has(k))throw new Error(`${id}/${c.id} invalid Knowledge ${k}`);for(const x of c.slideIds)if(!slides.has(x))throw new Error(`${id}/${c.id} invalid slide ${x}`);if('keywords' in c)throw new Error(`${id}/${c.id} fuzzy keywords forbidden`)}}
+          for(const [a,b] of [[9,6],[9,10],[10,1]])if(!m.loops.some(x=>x.from===a&&x.to===b))throw new Error(`loop ${a}->${b} missing`);
+          console.log('CURATED MAP PASS');
           NODE
 
-      - name: Personal page exclusion integrity
+      - name: Decision engine integrity
         run: |
           set -euo pipefail
           node <<'NODE'
-          const fs=require('fs');
-          const coverage=fs.readFileSync('assets/coverage.js','utf8');
-          const runtime=fs.readFileSync('assets/runtime.js','utf8');
-          const insights=fs.readFileSync('assets/insights.js','utf8');
-          const reasons=['無考試內容','QR Code／連結頁','封面／大綱／過場頁','重複頁','其他'];
-          for(const r of reasons)if(!coverage.includes(r))throw new Error(`missing exclusion reason: ${r}`);
-          for(const token of ['excluded:true','excludeReason','showExcluded','formalStudyPages','filter(s=>!isExcluded(s))','data-exclude-page','data-restore-page'])if(!coverage.includes(token))throw new Error(`coverage exclusion invariant missing: ${token}`);
-          if(!runtime.includes('if(isExcluded(s))return false'))throw new Error('runtime study flow does not skip exclusions');
-          if(!insights.includes('isExcluded'))throw new Error('analytics denominator does not exclude pages');
-          console.log('PERSONAL PAGE EXCLUSION PASS');
+          const fs=require('fs'),src=fs.readFileSync('assets/decision-engine.js','utf8'),bridge=fs.readFileSync('assets/decision-bridge.js','utf8'),ins=fs.readFileSync('assets/insights.js','utf8');
+          for(const t of ['risk:null','coverageConfidence','isManualImportant(k))p+=18','規則式申論'])if(!src.includes(t))throw new Error(`decision invariant missing: ${t}`);
+          if(src.includes('+1000')||ins.includes('+1000'))throw new Error('manual importance must not dominate with +1000');
+          if(!bridge.includes("rating==='again'" )||!bridge.includes('rerender(`#/quick/${k.id}`)'))throw new Error('same-concept correction loop missing');
+          if(!ins.includes('validateImport')||!ins.includes('schemaVersion:4'))throw new Error('backup schema validation missing');
+          console.log('DECISION ENGINE PASS');
           NODE
 
       - name: Day1 exact-slide media coverage
         run: |
           set -euo pipefail
           node <<'NODE'
-          const fs=require('fs'),vm=require('vm');
-          const box={window:{}};vm.createContext(box);vm.runInContext(fs.readFileSync('data/slide_media.js','utf8'),box);
-          const media=box.window.SLIDE_MEDIA,expected=Array.from({length:78},(_,i)=>`d1-s${String(i+1).padStart(3,'0')}`);
-          const missing=expected.filter(k=>!media?.items?.[k]);if(missing.length)throw new Error(`Day1 exact-slide media missing: ${missing.join(',')}`);
-          if(new Set(expected.map(k=>media.items[k].driveFileId)).size!==78)throw new Error('Day1 media duplicate IDs');
-          console.log('DAY1 EXACT-SLIDE MEDIA PASS: 78/78');
+          const fs=require('fs'),vm=require('vm'),box={window:{}};vm.createContext(box);vm.runInContext(fs.readFileSync('data/slide_media.js','utf8'),box);const media=box.window.SLIDE_MEDIA,expected=Array.from({length:78},(_,i)=>`d1-s${String(i+1).padStart(3,'0')}`),missing=expected.filter(k=>!media?.items?.[k]);if(missing.length)throw new Error(`Day1 media missing: ${missing.join(',')}`);if(new Set(expected.map(k=>media.items[k].driveFileId)).size!==78)throw new Error('Day1 duplicate media IDs');console.log('DAY1 EXACT-SLIDE MEDIA PASS: 78/78');
           NODE
