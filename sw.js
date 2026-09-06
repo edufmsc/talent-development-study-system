@@ -1,4 +1,5 @@
 const CACHE='td-study-os-20260906-trust-hardening-v1';
+// 2026-09-06 canonical source/content correction deployment trigger.
 const CORE=['./','./index.html','./assets/app.css','./assets/learning-map.css','./assets/coverage.css','./assets/insights.css','./assets/slide-preview.css','./assets/hardening.css','./assets/app.js','./assets/learning-map.js','./assets/coverage.js','./assets/slide-preview.js','./assets/insights.js','./assets/decision-engine.js','./assets/decision-bridge.js','./assets/runtime.js','./assets/scoring.js','./assets/icon.svg','./data/course_data.js','./data/slide_media.js','./data/learning_map.js','./manifest.webmanifest'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
